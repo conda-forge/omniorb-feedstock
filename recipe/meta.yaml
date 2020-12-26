@@ -10,17 +10,18 @@ source:
   patches:
     - patch-configure.diff
     - 0001-Avoid-kernel-128-character-shebang-limit.patch
+    - omniorb-4.2.4-cmake.patch # [win]
 
 build:
-  number: 1
-  skip: true  # [win]
+  number: 2
 
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - autoconf
-    - make
+    - autoconf # [unix]
+    - make     # [unix]
+    - cmake    # [win]
   host:
     - python
     - openssl
@@ -33,7 +34,16 @@ test:
   source_files:
     - idl/echo.idl
   commands:
-    - omniidl -bcxx idl/echo.idl
+    - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
+    - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
+    - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
+    - omniidl -bcxx idl/echo.idl                                       # [unix]
+    - if not exist %LIBRARY_BIN%\\x86_win32\\omniORB4_rt.dll exit 1    # [win]
+    - if not exist %LIBRARY_BIN%\\x86_win32\\COS4_rt.dll exit 1        # [win]
+    - if not exist %LIBRARY_BIN%\\x86_win32\\omnithread_rt.dll exit 1  # [win]
+    - if not exist %LIBRARY_LIB%\\x86_win32\\omniORB4_rt.lib exit 1    # [win]
+    - if not exist %LIBRARY_LIB%\\x86_win32\\COS4_rt.lib exit 1        # [win]
+    - if not exist %LIBRARY_LIB%\\x86_win32\\omnithread_rt.lib exit 1  # [win]
 
 about:
   home: http://omniorb.sourceforge.net/index.html
