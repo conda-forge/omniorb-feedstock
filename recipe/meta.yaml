@@ -10,7 +10,7 @@ source:
   patches:
     - patch-configure.diff
     - 0001-Avoid-kernel-128-character-shebang-limit.patch
-    - omniorb-4.2.4-cmake.patch # [win]
+    - omniorb-4.2.4-cmake.patch  # [win]
 
 build:
   number: 2
@@ -19,9 +19,9 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - autoconf # [unix]
-    - make     # [unix]
-    - cmake    # [win]
+    - autoconf  # [unix]
+    - make      # [unix]
+    - cmake     # [win]
   host:
     - python
     - openssl
