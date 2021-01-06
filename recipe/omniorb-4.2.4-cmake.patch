@@ -1,0 +1,4115 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..bafa870
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,5 @@
++build/
++cmake-build-debug/
++**/.directory
++**/*.pyc
++.idea/
+diff --git a/.travis.yml b/.travis.yml
+new file mode 100644
+index 0000000..b345416
+--- /dev/null
++++ b/.travis.yml
+@@ -0,0 +1,14 @@
++language: cpp
++compiler: gcc
++
++os: linux
++addons:
++  apt:
++    sources:
++      - ubuntu-toolchain-r-test
++    packages:
++
++script:
++  - cmake --version
++  - cmake CMakeLists.txt
++  - cmake  --build .
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100755
+index 0000000..45bee5b
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,64 @@
++cmake_minimum_required(VERSION 3.12)
++project(OmniORB VERSION 4.2.4)
++
++set(CMAKE_CXX_STANDARD 98)
++set(CMAKE_VERBOSE_MAKEFILE OFF)
++
++set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake/modules)
++set(OMNIORB_VERSION ${PROJECT_VERSION})
++set(OMNIORB_VERSION_HEX "0x040202F1")
++add_definitions(-D__OMNIORB4__)
++
++set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
++set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
++set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
++
++
++find_package(Python REQUIRED COMPONENTS Interpreter Development)
++message(STATUS "Found Python Debug Library: ${Python_LIBRARY_DEBUG}")
++message(STATUS "Found Python Release Library: ${Python_LIBRARY_RELEASE}")
++INCLUDE(SelectLibraryConfigurations)
++SELECT_LIBRARY_CONFIGURATIONS(Python)
++message(STATUS "Found Python Libraries: ${Python_LIBRARY}")
++
++
++find_package(Threads REQUIRED)
++
++if (UNIX)
++    SET(Python_EXECUTABLE ${Python_EXECUTABLE} CACHE STRING "Python Executable")
++    execute_process(
++            COMMAND "${Python_EXECUTABLE}" -c "if True:
++    from distutils import sysconfig as sc
++    print(sc.get_python_lib(prefix='', plat_specific=True))"
++            OUTPUT_VARIABLE PYTHON_SITE
++            OUTPUT_STRIP_TRAILING_WHITESPACE)
++else ()
++    string(REGEX REPLACE "\\\\" "/" python_site ${Python_SITELIB})
++    set(PYTHON_SITE ${python_site} CACHE STRING "The Path where the py files are installed")
++endif ()
++
++message(STATUS "Found Python python_site: ${PYTHON_SITE}")
++
++include(GNUInstallDirs)
++include(codegen.cmake)
++include(platform_checks.cmake)
++include(package_config.cmake)
++
++if (WIN32)
++    set(OMNI_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR}/x86_win32)
++    set(OMNI_ARCHIVE_DESTINATION ${CMAKE_INSTALL_LIBDIR}/x86_win32)
++else ()
++    set(OMNI_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR})
++    set(OMNI_ARCHIVE_DESTINATION ${CMAKE_INSTALL_LIBDIR}/static)
++endif()
++
++add_subdirectory(contrib)
++add_subdirectory(src)
++
++
++INSTALL(
++        DIRECTORY ${PROJECT_SOURCE_DIR}/include/
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++        FILES_MATCHING PATTERN "*.h*")
++
++
+diff --git a/cmake/CheckFunctionExistsHeader.cmake b/cmake/CheckFunctionExistsHeader.cmake
+new file mode 100644
+index 0000000..4ade846
+--- /dev/null
++++ b/cmake/CheckFunctionExistsHeader.cmake
+@@ -0,0 +1,23 @@
++#
++# - Check if the system has the ANSI C files
++# CHECK_STACK_DIRECTION
++#
++# The following variables may be set before calling this macro to
++# modify the way the check is run:
++#
++#  CMAKE_REQUIRED_FLAGS = string of compile command line flags
++#  CMAKE_REQUIRED_DEFINITIONS = list of macros to define (-DFOO=bar)
++#  CMAKE_REQUIRED_INCLUDES = list of include directories
++# Copyright (c) 2009, Michihiro NAKAJIMA
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
++# RETURN_VALUE > 0 => grows toward higher addresses
++# RETURN_VALUE < 0 => grows toward lower addresses
++# RETURN_VALUE = 0 => direction of growth unknown */
++
++macro(CHECK_FUNCTION_EXISTS_HEADER FUNCTION RETURN_VALUE INCLUDES)
++
++
++
++endmacro()
+\ No newline at end of file
+diff --git a/cmake/CheckHeaderSTDC.c b/cmake/CheckHeaderSTDC.c
+new file mode 100644
+index 0000000..0ea5b33
+--- /dev/null
++++ b/cmake/CheckHeaderSTDC.c
+@@ -0,0 +1,20 @@
++#include <stdlib.h>
++#include <stdarg.h>
++#include <string.h>
++#include <ctype.h>
++
++#define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
++#define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
++#define XOR(e, f) (((e) && !(f)) || (!(e) && (f)))
++
++int
++main()
++{
++    int i;
++
++    for (i = 0; i < 256; i++) {
++        if (XOR(islower(i), ISLOWER(i)) || toupper(i) != TOUPPER(i))
++            return 2;
++    }
++    return 0;
++}
+\ No newline at end of file
+diff --git a/cmake/CheckHeaderSTDC.cmake b/cmake/CheckHeaderSTDC.cmake
+new file mode 100644
+index 0000000..f0b3f46
+--- /dev/null
++++ b/cmake/CheckHeaderSTDC.cmake
+@@ -0,0 +1,52 @@
++#
++# - Check if the system has the ANSI C files
++# CHECK_HEADER_STDC
++#
++# The following variables may be set before calling this macro to
++# modify the way the check is run:
++#
++#  CMAKE_REQUIRED_FLAGS = string of compile command line flags
++#  CMAKE_REQUIRED_DEFINITIONS = list of macros to define (-DFOO=bar)
++#  CMAKE_REQUIRED_INCLUDES = list of include directories
++# Copyright (c) 2009, Michihiro NAKAJIMA
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
++
++macro(CHECK_HEADER_STDC RETURN_VALUE)
++    if (NOT DEFINED ${RETURN_VALUE})
++        if (CMAKE_REQUIRED_INCLUDES)
++            set(CHECK_HEADER_STDC_C_INCLUDE_DIRS "-DINCLUDE_DIRECTORIES=${CMAKE_REQUIRED_INCLUDES}")
++        else()
++            set(CHECK_HEADER_STDC_C_INCLUDE_DIRS)
++        endif()
++        set(MACRO_CHECK_HEADER_STDC_FLAGS ${CMAKE_REQUIRED_FLAGS})
++
++        message(STATUS "Check for ANSI C header files")
++        try_run(CHECK_HEADER_STDC_result
++                CHECK_HEADER_STDC_compile_result
++                ${PROJECT_BINARY_DIR}
++                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckHeaderSTDC.c
++                COMPILE_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
++                CMAKE_FLAGS
++                -DCOMPILE_DEFINITIONS:STRING=${MACRO_CHECK_HEADER_STDC_FLAGS}
++                "${CHECK_HEADER_STDC_C_INCLUDE_DIRS}"
++                OUTPUT_VARIABLE OUTPUT)
++
++        if(CHECK_HEADER_STDC_result EQUAL 0)
++            message(STATUS "Check for ANSI C header files - found")
++            set(${RETURN_VALUE} "1" CACHE INTERNAL "CHECK_HEADER_STDC")
++            file(APPEND ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
++                    "Determining if the include file ${INCLUDE} "
++                    "exists passed with the following output:\n"
++                    "${OUTPUT}\n\n")
++        else()
++            message(STATUS "Check for ANSI C header files - not found")
++            set(${RETURN_VALUE} "")
++            file(APPEND ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
++                    "Determining if the include file ${INCLUDE} "
++                    "exists failed with the following output:\n"
++                    "${OUTPUT}\n\n")
++        endif()
++    endif()
++endmacro()
+\ No newline at end of file
+diff --git a/cmake/CheckStackDirection.c b/cmake/CheckStackDirection.c
+new file mode 100644
+index 0000000..2dc32c6
+--- /dev/null
++++ b/cmake/CheckStackDirection.c
+@@ -0,0 +1,36 @@
++/* Copyright (c) 2010-2018. The SimGrid Team.
++ * All rights reserved.                                                     */
++
++/* This program is free software; you can redistribute it and/or modify it
++ * under the terms of the license (GNU LGPL) which comes with this package. */
++
++#include <stdio.h>
++#include <stdlib.h>
++
++static int iterate = 10;
++static int growsdown(int *x)
++{
++    int y = (x > &y);
++
++    if (--iterate > 0)
++        y = growsdown(&y);
++
++    /* The stack sometimes changes at the 0th level.
++     * Original version did fail in this case, but I changed this around SimGrid 3.13 because of https://bugs.debian.org/814272
++     * Every arch failed on that day :(
++     */
++    if (iterate != 0 && y != (x > &y)) {
++        fprintf(stderr, "The stack changed its direction! (Iteration: %d. It was growing %s; &y=%p; &prevY=%p)\n",
++                (10 - iterate), y ? "down" : "up", &y, x);
++        exit(1);
++    }
++    return y;
++}
++
++int main(int argc, char *argv[])
++{
++    int x;
++    printf("%s", growsdown(&x) ? "down" : "up");
++
++    return 0;
++}
+\ No newline at end of file
+diff --git a/cmake/CheckStackDirection.cmake b/cmake/CheckStackDirection.cmake
+new file mode 100644
+index 0000000..bc716c5
+--- /dev/null
++++ b/cmake/CheckStackDirection.cmake
+@@ -0,0 +1,65 @@
++#
++# - Check if the system has the ANSI C files
++# CHECK_STACK_DIRECTION
++#
++# The following variables may be set before calling this macro to
++# modify the way the check is run:
++#
++#  CMAKE_REQUIRED_FLAGS = string of compile command line flags
++#  CMAKE_REQUIRED_DEFINITIONS = list of macros to define (-DFOO=bar)
++#  CMAKE_REQUIRED_INCLUDES = list of include directories
++# Copyright (c) 2009, Michihiro NAKAJIMA
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
++# RETURN_VALUE > 0 => grows toward higher addresses
++# RETURN_VALUE < 0 => grows toward lower addresses
++# RETURN_VALUE = 0 => direction of growth unknown */
++
++macro(CHECK_STACK_DIRECTION RETURN_VALUE)
++    if (NOT DEFINED ${RETURN_VALUE})
++        if (CMAKE_REQUIRED_INCLUDES)
++            set(CHECK_STACK_DIRECTION_C_INCLUDE_DIRS "-DINCLUDE_DIRECTORIES=${CMAKE_REQUIRED_INCLUDES}")
++        else ()
++            set(CHECK_STACK_DIRECTION_C_INCLUDE_DIRS)
++        endif ()
++        set(MACRO_CHECK_STACK_DIRECTION_FLAGS ${CMAKE_REQUIRED_FLAGS})
++
++        message(STATUS "Check stack growing direction")
++
++
++        try_run(CHECK_STACK_DIRECTION_result
++                CHECK_STACK_DIRECTION_compile_result
++                ${PROJECT_BINARY_DIR}
++                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckStackDirection.c
++                COMPILE_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS}
++                CMAKE_FLAGS
++                -DCOMPILE_DEFINITIONS:STRING=${MACRO_CHECK_STACK_DIRECTION_FLAGS}
++                "${CHECK_STACK_DIRECTION_C_INCLUDE_DIRS}"
++                RUN_OUTPUT_VARIABLE stack
++                )
++
++        if ("${stack}" STREQUAL "down")
++            set(${RETURN_VALUE} "-1" CACHE INTERNAL "CHECK_STACK_DIRECTION")
++            message(STATUS "Check for stack growing direction - downwards")
++            file(APPEND ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
++                    "Determining if the include file ${INCLUDE} "
++                    "exists passed with the following output:\n"
++                    "${stack}\n\n")
++        elseif ("${stack}" STREQUAL "up")
++            set(${RETURN_VALUE} "1" CACHE INTERNAL "CHECK_STACK_DIRECTION")
++            message(STATUS "Check for stack growing direction - upwards")
++            file(APPEND ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
++                    "Determining the stack direction ${INCLUDE} "
++                    "passed with the following output:\n"
++                    "${stack}\n\n")
++        else ()
++            message(STATUS "Check for stack growing direction - unknown")
++            file(APPEND ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
++                    "Determining the stack direction ${INCLUDE} "
++                    "failed with the following output:\n"
++                    "${stack}\n\n")
++        endif ()
++    endif ()
++
++endmacro()
+\ No newline at end of file
+diff --git a/cmake/CheckWinVer.cmake b/cmake/CheckWinVer.cmake
+new file mode 100644
+index 0000000..10741f9
+--- /dev/null
++++ b/cmake/CheckWinVer.cmake
+@@ -0,0 +1,18 @@
++
++macro(get_WIN32_WINNT version)
++    if (CMAKE_SYSTEM_VERSION)
++        set(ver ${CMAKE_SYSTEM_VERSION})
++        string(REGEX MATCH "^([0-9]+).([0-9])" ver ${ver})
++        string(REGEX MATCH "^([0-9]+)" verMajor ${ver})
++        # Check for Windows 10, b/c we'll need to convert to hex 'A'.
++        if ("${verMajor}" MATCHES "10")
++            set(verMajor "A")
++            string(REGEX REPLACE "^([0-9]+)" ${verMajor} ver ${ver})
++        endif ("${verMajor}" MATCHES "10")
++        # Remove all remaining '.' characters.
++        string(REPLACE "." "" ver ${ver})
++        # Prepend each digit with a zero.
++        string(REGEX REPLACE "([0-9A-Z])" "0\\1" ver ${ver})
++        set(${version} "0x${ver}")
++    endif(CMAKE_SYSTEM_VERSION)
++endmacro(get_WIN32_WINNT)
+diff --git a/cmake/OmniORBConfig.cmake.in b/cmake/OmniORBConfig.cmake.in
+new file mode 100644
+index 0000000..e51dac6
+--- /dev/null
++++ b/cmake/OmniORBConfig.cmake.in
+@@ -0,0 +1,22 @@
++set(OMNIORB_VERSION @PROJECT_VERSION@)
++
++@PACKAGE_INIT@
++
++
++include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
++
++set(_IMPORT_PREFIX ${PACKAGE_PREFIX_DIR})
++
++find_package(Threads REQUIRED)
++
++message(STATUS "Found @PROJECT_NAME@ (found version \"@PROJECT_VERSION@\")")
++set(OMNIORB4_IDL_COMPILER @OMNIIDL_EXEC_INSTALL@)
++set(OMNIIDL_PLATFORM_FLAGS @OMNIIDL_PLATFORM_FLAGS@)
++set_and_check(OMNI_PYTHON_RESOURCES @OMNI_PYTHON_RESOURCES_INSTALL@)
++set(RUN_OMNIIDL_DEPS OmniORB::omniidl OmniORB::omnicpp)
++set(OMNIORB4_LIBRARIES OmniORB::omniORB4 OmniORB::omnithread OmniORB::omniDynamic4 OmniORB::COS4 OmniORB::COSDynamic4)
++get_target_property(OMNIORB4_INCLUDE_DIR OmniORB::omniORB4 INTERFACE_INCLUDE_DIRECTORIES)
++get_target_property(OMNIORB_INCLUDE_DIR OmniORB::omniORB4 INTERFACE_INCLUDE_DIRECTORIES)
++
++
++include(${CMAKE_CURRENT_LIST_DIR}/run_omniidl.cmake)
+diff --git a/cmake/modules/CMakeFindFrameworks.cmake b/cmake/modules/CMakeFindFrameworks.cmake
+new file mode 100644
+index 0000000..6c4c527
+--- /dev/null
++++ b/cmake/modules/CMakeFindFrameworks.cmake
+@@ -0,0 +1,32 @@
++# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
++# file Copyright.txt or https://cmake.org/licensing for details.
++
++#.rst:
++# CMakeFindFrameworks
++# -------------------
++#
++# helper module to find OSX frameworks
++#
++# This module reads hints about search locations from variables::
++#
++#   CMAKE_FIND_FRAMEWORK_EXTRA_LOCATIONS - Extra directories
++
++if(NOT CMAKE_FIND_FRAMEWORKS_INCLUDED)
++  set(CMAKE_FIND_FRAMEWORKS_INCLUDED 1)
++  macro(CMAKE_FIND_FRAMEWORKS fwk)
++    set(${fwk}_FRAMEWORKS)
++    if(APPLE)
++      foreach(dir
++          ~/Library/Frameworks/${fwk}.framework
++          /usr/local/Frameworks/${fwk}.framework
++          /Library/Frameworks/${fwk}.framework
++          /System/Library/Frameworks/${fwk}.framework
++          /Network/Library/Frameworks/${fwk}.framework
++          ${CMAKE_FIND_FRAMEWORK_EXTRA_LOCATIONS})
++        if(EXISTS ${dir})
++          set(${fwk}_FRAMEWORKS ${${fwk}_FRAMEWORKS} ${dir})
++        endif()
++      endforeach()
++    endif()
++  endmacro()
++endif()
+diff --git a/cmake/modules/FindPackageHandleStandardArgs.cmake b/cmake/modules/FindPackageHandleStandardArgs.cmake
+new file mode 100644
+index 0000000..67f6bd6
+--- /dev/null
++++ b/cmake/modules/FindPackageHandleStandardArgs.cmake
+@@ -0,0 +1,386 @@
++# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
++# file Copyright.txt or https://cmake.org/licensing for details.
++
++#[=======================================================================[.rst:
++FindPackageHandleStandardArgs
++-----------------------------
++
++This module provides a function intended to be used in :ref:`Find Modules`
++implementing :command:`find_package(<PackageName>)` calls.  It handles the
++``REQUIRED``, ``QUIET`` and version-related arguments of ``find_package``.
++It also sets the ``<PackageName>_FOUND`` variable.  The package is
++considered found if all variables listed contain valid results, e.g.
++valid filepaths.
++
++.. command:: find_package_handle_standard_args
++
++  There are two signatures::
++
++    find_package_handle_standard_args(<PackageName>
++      (DEFAULT_MSG|<custom-failure-message>)
++      <required-var>...
++      )
++
++    find_package_handle_standard_args(<PackageName>
++      [FOUND_VAR <result-var>]
++      [REQUIRED_VARS <required-var>...]
++      [VERSION_VAR <version-var>]
++      [HANDLE_COMPONENTS]
++      [CONFIG_MODE]
++      [FAIL_MESSAGE <custom-failure-message>]
++      )
++
++  The ``<PackageName>_FOUND`` variable will be set to ``TRUE`` if all
++  the variables ``<required-var>...`` are valid and any optional
++  constraints are satisfied, and ``FALSE`` otherwise.  A success or
++  failure message may be displayed based on the results and on
++  whether the ``REQUIRED`` and/or ``QUIET`` option was given to
++  the :command:`find_package` call.
++
++  The options are:
++
++  ``(DEFAULT_MSG|<custom-failure-message>)``
++    In the simple signature this specifies the failure message.
++    Use ``DEFAULT_MSG`` to ask for a default message to be computed
++    (recommended).  Not valid in the full signature.
++
++  ``FOUND_VAR <result-var>``
++    Obsolete.  Specifies either ``<PackageName>_FOUND`` or
++    ``<PACKAGENAME>_FOUND`` as the result variable.  This exists only
++    for compatibility with older versions of CMake and is now ignored.
++    Result variables of both names are always set for compatibility.
++
++  ``REQUIRED_VARS <required-var>...``
++    Specify the variables which are required for this package.
++    These may be named in the generated failure message asking the
++    user to set the missing variable values.  Therefore these should
++    typically be cache entries such as ``FOO_LIBRARY`` and not output
++    variables like ``FOO_LIBRARIES``.
++
++  ``VERSION_VAR <version-var>``
++    Specify the name of a variable that holds the version of the package
++    that has been found.  This version will be checked against the
++    (potentially) specified required version given to the
++    :command:`find_package` call, including its ``EXACT`` option.
++    The default messages include information about the required
++    version and the version which has been actually found, both
++    if the version is ok or not.
++
++  ``HANDLE_COMPONENTS``
++    Enable handling of package components.  In this case, the command
++    will report which components have been found and which are missing,
++    and the ``<PackageName>_FOUND`` variable will be set to ``FALSE``
++    if any of the required components (i.e. not the ones listed after
++    the ``OPTIONAL_COMPONENTS`` option of :command:`find_package`) are
++    missing.
++
++  ``CONFIG_MODE``
++    Specify that the calling find module is a wrapper around a
++    call to ``find_package(<PackageName> NO_MODULE)``.  This implies
++    a ``VERSION_VAR`` value of ``<PackageName>_VERSION``.  The command
++    will automatically check whether the package configuration file
++    was found.
++
++  ``FAIL_MESSAGE <custom-failure-message>``
++    Specify a custom failure message instead of using the default
++    generated message.  Not recommended.
++
++Example for the simple signature:
++
++.. code-block:: cmake
++
++  find_package_handle_standard_args(LibXml2 DEFAULT_MSG
++    LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR)
++
++The ``LibXml2`` package is considered to be found if both
++``LIBXML2_LIBRARY`` and ``LIBXML2_INCLUDE_DIR`` are valid.
++Then also ``LibXml2_FOUND`` is set to ``TRUE``.  If it is not found
++and ``REQUIRED`` was used, it fails with a
++:command:`message(FATAL_ERROR)`, independent whether ``QUIET`` was
++used or not.  If it is found, success will be reported, including
++the content of the first ``<required-var>``.  On repeated CMake runs,
++the same message will not be printed again.
++
++Example for the full signature:
++
++.. code-block:: cmake
++
++  find_package_handle_standard_args(LibArchive
++    REQUIRED_VARS LibArchive_LIBRARY LibArchive_INCLUDE_DIR
++    VERSION_VAR LibArchive_VERSION)
++
++In this case, the ``LibArchive`` package is considered to be found if
++both ``LibArchive_LIBRARY`` and ``LibArchive_INCLUDE_DIR`` are valid.
++Also the version of ``LibArchive`` will be checked by using the version
++contained in ``LibArchive_VERSION``.  Since no ``FAIL_MESSAGE`` is given,
++the default messages will be printed.
++
++Another example for the full signature:
++
++.. code-block:: cmake
++
++  find_package(Automoc4 QUIET NO_MODULE HINTS /opt/automoc4)
++  find_package_handle_standard_args(Automoc4  CONFIG_MODE)
++
++In this case, a ``FindAutmoc4.cmake`` module wraps a call to
++``find_package(Automoc4 NO_MODULE)`` and adds an additional search
++directory for ``automoc4``.  Then the call to
++``find_package_handle_standard_args`` produces a proper success/failure
++message.
++#]=======================================================================]
++
++include(${CMAKE_CURRENT_LIST_DIR}/FindPackageMessage.cmake)
++
++# internal helper macro
++macro(_FPHSA_FAILURE_MESSAGE _msg)
++  if (${_NAME}_FIND_REQUIRED)
++    message(FATAL_ERROR "${_msg}")
++  else ()
++    if (NOT ${_NAME}_FIND_QUIETLY)
++      message(STATUS "${_msg}")
++    endif ()
++  endif ()
++endmacro()
++
++
++# internal helper macro to generate the failure message when used in CONFIG_MODE:
++macro(_FPHSA_HANDLE_FAILURE_CONFIG_MODE)
++  # <name>_CONFIG is set, but FOUND is false, this means that some other of the REQUIRED_VARS was not found:
++  if(${_NAME}_CONFIG)
++    _FPHSA_FAILURE_MESSAGE("${FPHSA_FAIL_MESSAGE}: missing:${MISSING_VARS} (found ${${_NAME}_CONFIG} ${VERSION_MSG})")
++  else()
++    # If _CONSIDERED_CONFIGS is set, the config-file has been found, but no suitable version.
++    # List them all in the error message:
++    if(${_NAME}_CONSIDERED_CONFIGS)
++      set(configsText "")
++      list(LENGTH ${_NAME}_CONSIDERED_CONFIGS configsCount)
++      math(EXPR configsCount "${configsCount} - 1")
++      foreach(currentConfigIndex RANGE ${configsCount})
++        list(GET ${_NAME}_CONSIDERED_CONFIGS ${currentConfigIndex} filename)
++        list(GET ${_NAME}_CONSIDERED_VERSIONS ${currentConfigIndex} version)
++        string(APPEND configsText "    ${filename} (version ${version})\n")
++      endforeach()
++      if (${_NAME}_NOT_FOUND_MESSAGE)
++        string(APPEND configsText "    Reason given by package: ${${_NAME}_NOT_FOUND_MESSAGE}\n")
++      endif()
++      _FPHSA_FAILURE_MESSAGE("${FPHSA_FAIL_MESSAGE} ${VERSION_MSG}, checked the following files:\n${configsText}")
++
++    else()
++      # Simple case: No Config-file was found at all:
++      _FPHSA_FAILURE_MESSAGE("${FPHSA_FAIL_MESSAGE}: found neither ${_NAME}Config.cmake nor ${_NAME_LOWER}-config.cmake ${VERSION_MSG}")
++    endif()
++  endif()
++endmacro()
++
++
++function(FIND_PACKAGE_HANDLE_STANDARD_ARGS _NAME _FIRST_ARG)
++
++# Set up the arguments for `cmake_parse_arguments`.
++  set(options  CONFIG_MODE  HANDLE_COMPONENTS)
++  set(oneValueArgs  FAIL_MESSAGE  VERSION_VAR  FOUND_VAR)
++  set(multiValueArgs REQUIRED_VARS)
++
++# Check whether we are in 'simple' or 'extended' mode:
++  set(_KEYWORDS_FOR_EXTENDED_MODE  ${options} ${oneValueArgs} ${multiValueArgs} )
++  list(FIND _KEYWORDS_FOR_EXTENDED_MODE "${_FIRST_ARG}" INDEX)
++
++  if(${INDEX} EQUAL -1)
++    set(FPHSA_FAIL_MESSAGE ${_FIRST_ARG})
++    set(FPHSA_REQUIRED_VARS ${ARGN})
++    set(FPHSA_VERSION_VAR)
++  else()
++    cmake_parse_arguments(FPHSA "${options}" "${oneValueArgs}" "${multiValueArgs}"  ${_FIRST_ARG} ${ARGN})
++
++    if(FPHSA_UNPARSED_ARGUMENTS)
++      message(FATAL_ERROR "Unknown keywords given to FIND_PACKAGE_HANDLE_STANDARD_ARGS(): \"${FPHSA_UNPARSED_ARGUMENTS}\"")
++    endif()
++
++    if(NOT FPHSA_FAIL_MESSAGE)
++      set(FPHSA_FAIL_MESSAGE  "DEFAULT_MSG")
++    endif()
++
++    # In config-mode, we rely on the variable <package>_CONFIG, which is set by find_package()
++    # when it successfully found the config-file, including version checking:
++    if(FPHSA_CONFIG_MODE)
++      list(INSERT FPHSA_REQUIRED_VARS 0 ${_NAME}_CONFIG)
++      list(REMOVE_DUPLICATES FPHSA_REQUIRED_VARS)
++      set(FPHSA_VERSION_VAR ${_NAME}_VERSION)
++    endif()
++
++    if(NOT FPHSA_REQUIRED_VARS)
++      message(FATAL_ERROR "No REQUIRED_VARS specified for FIND_PACKAGE_HANDLE_STANDARD_ARGS()")
++    endif()
++  endif()
++
++# now that we collected all arguments, process them
++
++  if("x${FPHSA_FAIL_MESSAGE}" STREQUAL "xDEFAULT_MSG")
++    set(FPHSA_FAIL_MESSAGE "Could NOT find ${_NAME}")
++  endif()
++
++  list(GET FPHSA_REQUIRED_VARS 0 _FIRST_REQUIRED_VAR)
++
++  string(TOUPPER ${_NAME} _NAME_UPPER)
++  string(TOLOWER ${_NAME} _NAME_LOWER)
++
++  if(FPHSA_FOUND_VAR)
++    if(FPHSA_FOUND_VAR MATCHES "^${_NAME}_FOUND$"  OR  FPHSA_FOUND_VAR MATCHES "^${_NAME_UPPER}_FOUND$")
++      set(_FOUND_VAR ${FPHSA_FOUND_VAR})
++    else()
++      message(FATAL_ERROR "The argument for FOUND_VAR is \"${FPHSA_FOUND_VAR}\", but only \"${_NAME}_FOUND\" and \"${_NAME_UPPER}_FOUND\" are valid names.")
++    endif()
++  else()
++    set(_FOUND_VAR ${_NAME_UPPER}_FOUND)
++  endif()
++
++  # collect all variables which were not found, so they can be printed, so the
++  # user knows better what went wrong (#6375)
++  set(MISSING_VARS "")
++  set(DETAILS "")
++  # check if all passed variables are valid
++  set(FPHSA_FOUND_${_NAME} TRUE)
++  foreach(_CURRENT_VAR ${FPHSA_REQUIRED_VARS})
++    if(NOT ${_CURRENT_VAR})
++      set(FPHSA_FOUND_${_NAME} FALSE)
++      string(APPEND MISSING_VARS " ${_CURRENT_VAR}")
++    else()
++      string(APPEND DETAILS "[${${_CURRENT_VAR}}]")
++    endif()
++  endforeach()
++  if(FPHSA_FOUND_${_NAME})
++    set(${_NAME}_FOUND TRUE)
++    set(${_NAME_UPPER}_FOUND TRUE)
++  else()
++    set(${_NAME}_FOUND FALSE)
++    set(${_NAME_UPPER}_FOUND FALSE)
++  endif()
++
++  # component handling
++  unset(FOUND_COMPONENTS_MSG)
++  unset(MISSING_COMPONENTS_MSG)
++
++  if(FPHSA_HANDLE_COMPONENTS)
++    foreach(comp ${${_NAME}_FIND_COMPONENTS})
++      if(${_NAME}_${comp}_FOUND)
++
++        if(NOT DEFINED FOUND_COMPONENTS_MSG)
++          set(FOUND_COMPONENTS_MSG "found components: ")
++        endif()
++        string(APPEND FOUND_COMPONENTS_MSG " ${comp}")
++
++      else()
++
++        if(NOT DEFINED MISSING_COMPONENTS_MSG)
++          set(MISSING_COMPONENTS_MSG "missing components: ")
++        endif()
++        string(APPEND MISSING_COMPONENTS_MSG " ${comp}")
++
++        if(${_NAME}_FIND_REQUIRED_${comp})
++          set(${_NAME}_FOUND FALSE)
++          string(APPEND MISSING_VARS " ${comp}")
++        endif()
++
++      endif()
++    endforeach()
++    set(COMPONENT_MSG "${FOUND_COMPONENTS_MSG} ${MISSING_COMPONENTS_MSG}")
++    string(APPEND DETAILS "[c${COMPONENT_MSG}]")
++  endif()
++
++  # version handling:
++  set(VERSION_MSG "")
++  set(VERSION_OK TRUE)
++
++  # check with DEFINED here as the requested or found version may be "0"
++  if (DEFINED ${_NAME}_FIND_VERSION)
++    if(DEFINED ${FPHSA_VERSION_VAR})
++      set(_FOUND_VERSION ${${FPHSA_VERSION_VAR}})
++
++      if(${_NAME}_FIND_VERSION_EXACT)       # exact version required
++        # count the dots in the version string
++        string(REGEX REPLACE "[^.]" "" _VERSION_DOTS "${_FOUND_VERSION}")
++        # add one dot because there is one dot more than there are components
++        string(LENGTH "${_VERSION_DOTS}." _VERSION_DOTS)
++        if (_VERSION_DOTS GREATER ${_NAME}_FIND_VERSION_COUNT)
++          # Because of the C++ implementation of find_package() ${_NAME}_FIND_VERSION_COUNT
++          # is at most 4 here. Therefore a simple lookup table is used.
++          if (${_NAME}_FIND_VERSION_COUNT EQUAL 1)
++            set(_VERSION_REGEX "[^.]*")
++          elseif (${_NAME}_FIND_VERSION_COUNT EQUAL 2)
++            set(_VERSION_REGEX "[^.]*\\.[^.]*")
++          elseif (${_NAME}_FIND_VERSION_COUNT EQUAL 3)
++            set(_VERSION_REGEX "[^.]*\\.[^.]*\\.[^.]*")
++          else ()
++            set(_VERSION_REGEX "[^.]*\\.[^.]*\\.[^.]*\\.[^.]*")
++          endif ()
++          string(REGEX REPLACE "^(${_VERSION_REGEX})\\..*" "\\1" _VERSION_HEAD "${_FOUND_VERSION}")
++          unset(_VERSION_REGEX)
++          if (NOT ${_NAME}_FIND_VERSION VERSION_EQUAL _VERSION_HEAD)
++            set(VERSION_MSG "Found unsuitable version \"${_FOUND_VERSION}\", but required is exact version \"${${_NAME}_FIND_VERSION}\"")
++            set(VERSION_OK FALSE)
++          else ()
++            set(VERSION_MSG "(found suitable exact version \"${_FOUND_VERSION}\")")
++          endif ()
++          unset(_VERSION_HEAD)
++        else ()
++          if (NOT ${_NAME}_FIND_VERSION VERSION_EQUAL _FOUND_VERSION)
++            set(VERSION_MSG "Found unsuitable version \"${_FOUND_VERSION}\", but required is exact version \"${${_NAME}_FIND_VERSION}\"")
++            set(VERSION_OK FALSE)
++          else ()
++            set(VERSION_MSG "(found suitable exact version \"${_FOUND_VERSION}\")")
++          endif ()
++        endif ()
++        unset(_VERSION_DOTS)
++
++      else()     # minimum version specified:
++        if (${_NAME}_FIND_VERSION VERSION_GREATER _FOUND_VERSION)
++          set(VERSION_MSG "Found unsuitable version \"${_FOUND_VERSION}\", but required is at least \"${${_NAME}_FIND_VERSION}\"")
++          set(VERSION_OK FALSE)
++        else ()
++          set(VERSION_MSG "(found suitable version \"${_FOUND_VERSION}\", minimum required is \"${${_NAME}_FIND_VERSION}\")")
++        endif ()
++      endif()
++
++    else()
++
++      # if the package was not found, but a version was given, add that to the output:
++      if(${_NAME}_FIND_VERSION_EXACT)
++         set(VERSION_MSG "(Required is exact version \"${${_NAME}_FIND_VERSION}\")")
++      else()
++         set(VERSION_MSG "(Required is at least version \"${${_NAME}_FIND_VERSION}\")")
++      endif()
++
++    endif()
++  else ()
++    # Check with DEFINED as the found version may be 0.
++    if(DEFINED ${FPHSA_VERSION_VAR})
++      set(VERSION_MSG "(found version \"${${FPHSA_VERSION_VAR}}\")")
++    endif()
++  endif ()
++
++  if(VERSION_OK)
++    string(APPEND DETAILS "[v${${FPHSA_VERSION_VAR}}(${${_NAME}_FIND_VERSION})]")
++  else()
++    set(${_NAME}_FOUND FALSE)
++  endif()
++
++
++  # print the result:
++  if (${_NAME}_FOUND)
++    FIND_PACKAGE_MESSAGE(${_NAME} "Found ${_NAME}: ${${_FIRST_REQUIRED_VAR}} ${VERSION_MSG} ${COMPONENT_MSG}" "${DETAILS}")
++  else ()
++
++    if(FPHSA_CONFIG_MODE)
++      _FPHSA_HANDLE_FAILURE_CONFIG_MODE()
++    else()
++      if(NOT VERSION_OK)
++        _FPHSA_FAILURE_MESSAGE("${FPHSA_FAIL_MESSAGE}: ${VERSION_MSG} (found ${${_FIRST_REQUIRED_VAR}})")
++      else()
++        _FPHSA_FAILURE_MESSAGE("${FPHSA_FAIL_MESSAGE} (missing:${MISSING_VARS}) ${VERSION_MSG}")
++      endif()
++    endif()
++
++  endif ()
++
++  set(${_NAME}_FOUND ${${_NAME}_FOUND} PARENT_SCOPE)
++  set(${_NAME_UPPER}_FOUND ${${_NAME}_FOUND} PARENT_SCOPE)
++endfunction()
+diff --git a/cmake/modules/FindPackageMessage.cmake b/cmake/modules/FindPackageMessage.cmake
+new file mode 100644
+index 0000000..6821cee
+--- /dev/null
++++ b/cmake/modules/FindPackageMessage.cmake
+@@ -0,0 +1,47 @@
++# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
++# file Copyright.txt or https://cmake.org/licensing for details.
++
++#.rst:
++# FindPackageMessage
++# ------------------
++#
++#
++#
++# FIND_PACKAGE_MESSAGE(<name> "message for user" "find result details")
++#
++# This macro is intended to be used in FindXXX.cmake modules files.  It
++# will print a message once for each unique find result.  This is useful
++# for telling the user where a package was found.  The first argument
++# specifies the name (XXX) of the package.  The second argument
++# specifies the message to display.  The third argument lists details
++# about the find result so that if they change the message will be
++# displayed again.  The macro also obeys the QUIET argument to the
++# find_package command.
++#
++# Example:
++#
++# ::
++#
++#   if(X11_FOUND)
++#     FIND_PACKAGE_MESSAGE(X11 "Found X11: ${X11_X11_LIB}"
++#       "[${X11_X11_LIB}][${X11_INCLUDE_DIR}]")
++#   else()
++#    ...
++#   endif()
++
++function(FIND_PACKAGE_MESSAGE pkg msg details)
++  # Avoid printing a message repeatedly for the same find result.
++  if(NOT ${pkg}_FIND_QUIETLY)
++    string(REPLACE "\n" "" details "${details}")
++    set(DETAILS_VAR FIND_PACKAGE_MESSAGE_DETAILS_${pkg})
++    if(NOT "${details}" STREQUAL "${${DETAILS_VAR}}")
++      # The message has not yet been printed.
++      message(STATUS "${msg}")
++
++      # Save the find details in the cache to avoid printing the same
++      # message again.
++      set("${DETAILS_VAR}" "${details}"
++        CACHE INTERNAL "Details about finding ${pkg}")
++    endif()
++  endif()
++endfunction()
+diff --git a/cmake/modules/SelectLibraryConfigurations.cmake b/cmake/modules/SelectLibraryConfigurations.cmake
+new file mode 100644
+index 0000000..fe3bb00
+--- /dev/null
++++ b/cmake/modules/SelectLibraryConfigurations.cmake
+@@ -0,0 +1,71 @@
++# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
++# file Copyright.txt or https://cmake.org/licensing for details.
++
++#.rst:
++# SelectLibraryConfigurations
++# ---------------------------
++#
++#
++#
++# select_library_configurations( basename )
++#
++# This macro takes a library base name as an argument, and will choose
++# good values for basename_LIBRARY, basename_LIBRARIES,
++# basename_LIBRARY_DEBUG, and basename_LIBRARY_RELEASE depending on what
++# has been found and set.  If only basename_LIBRARY_RELEASE is defined,
++# basename_LIBRARY will be set to the release value, and
++# basename_LIBRARY_DEBUG will be set to basename_LIBRARY_DEBUG-NOTFOUND.
++# If only basename_LIBRARY_DEBUG is defined, then basename_LIBRARY will
++# take the debug value, and basename_LIBRARY_RELEASE will be set to
++# basename_LIBRARY_RELEASE-NOTFOUND.
++#
++# If the generator supports configuration types, then basename_LIBRARY
++# and basename_LIBRARIES will be set with debug and optimized flags
++# specifying the library to be used for the given configuration.  If no
++# build type has been set or the generator in use does not support
++# configuration types, then basename_LIBRARY and basename_LIBRARIES will
++# take only the release value, or the debug value if the release one is
++# not set.
++
++# This macro was adapted from the FindQt4 CMake module and is maintained by Will
++# Dicharry <wdicharry@stellarscience.com>.
++
++macro( select_library_configurations basename )
++    if(NOT ${basename}_LIBRARY_RELEASE)
++        set(${basename}_LIBRARY_RELEASE "${basename}_LIBRARY_RELEASE-NOTFOUND" CACHE FILEPATH "Path to a library.")
++    endif()
++    if(NOT ${basename}_LIBRARY_DEBUG)
++        set(${basename}_LIBRARY_DEBUG "${basename}_LIBRARY_DEBUG-NOTFOUND" CACHE FILEPATH "Path to a library.")
++    endif()
++
++    get_property(_isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
++    if( ${basename}_LIBRARY_DEBUG AND ${basename}_LIBRARY_RELEASE AND
++           NOT ${basename}_LIBRARY_DEBUG STREQUAL ${basename}_LIBRARY_RELEASE AND
++           ( _isMultiConfig OR CMAKE_BUILD_TYPE ) )
++        # if the generator is multi-config or if CMAKE_BUILD_TYPE is set for
++        # single-config generators, set optimized and debug libraries
++        set( ${basename}_LIBRARY "" )
++        foreach( _libname IN LISTS ${basename}_LIBRARY_RELEASE )
++            list( APPEND ${basename}_LIBRARY optimized "${_libname}" )
++        endforeach()
++        foreach( _libname IN LISTS ${basename}_LIBRARY_DEBUG )
++            list( APPEND ${basename}_LIBRARY debug "${_libname}" )
++        endforeach()
++    elseif( ${basename}_LIBRARY_RELEASE )
++        set( ${basename}_LIBRARY ${${basename}_LIBRARY_RELEASE} )
++    elseif( ${basename}_LIBRARY_DEBUG )
++        set( ${basename}_LIBRARY ${${basename}_LIBRARY_DEBUG} )
++    else()
++        set( ${basename}_LIBRARY "${basename}_LIBRARY-NOTFOUND")
++    endif()
++
++    set( ${basename}_LIBRARIES "${${basename}_LIBRARY}" )
++
++    if( ${basename}_LIBRARY )
++        set( ${basename}_FOUND TRUE )
++    endif()
++
++    mark_as_advanced( ${basename}_LIBRARY_RELEASE
++        ${basename}_LIBRARY_DEBUG
++    )
++endmacro()
+diff --git a/cmake/run_omniidl.cmake b/cmake/run_omniidl.cmake
+new file mode 100644
+index 0000000..23a4ffa
+--- /dev/null
++++ b/cmake/run_omniidl.cmake
+@@ -0,0 +1,19 @@
++macro(RUN_OMNIIDL IDL_FILE OUTPUT_DIRECTORY INCLUDE_DIRECTORY OPTIONS OUTPUT_FILES)
++    file(MAKE_DIRECTORY ${OUTPUT_DIRECTORY})
++    get_filename_component(IDL_FILE_BASENAME ${IDL_FILE} NAME)
++    set(INTERNAL_OUTPUT_FILES ${OUTPUT_FILES})
++    set(INTERNAL_OPTIONS ${OPTIONS})
++    set(OUT_WITH_PATH)
++    foreach (arg IN LISTS INTERNAL_OUTPUT_FILES)
++        set(OUT_WITH_PATH ${OUT_WITH_PATH} ${OUTPUT_DIRECTORY}/${arg})
++    endforeach ()
++    ADD_CUSTOM_COMMAND(OUTPUT ${OUT_WITH_PATH}
++            COMMAND ${OMNIORB4_IDL_COMPILER} ${OMNIIDL_PLATFORM_FLAGS} -bcxx -p${OMNI_PYTHON_RESOURCES} -I${INCLUDE_DIRECTORY} ${INTERNAL_OPTIONS} -C${OUTPUT_DIRECTORY} ${IDL_FILE}
++            DEPENDS ${IDL_FILE} ${RUN_OMNIIDL_DEPS}
++            COMMENT "Processing ${IDL_FILE_BASENAME}..")
++
++    set(OUTPARAM "${ARGN}")
++    foreach (loop_var IN LISTS OUTPARAM)
++        set(${OUTPARAM} ${${OUTPARAM}} ${OUT_WITH_PATH})
++    endforeach ()
++endmacro(RUN_OMNIIDL)
+\ No newline at end of file
+diff --git a/cmake/timeofdayTimezone.c b/cmake/timeofdayTimezone.c
+new file mode 100644
+index 0000000..3a731c8
+--- /dev/null
++++ b/cmake/timeofdayTimezone.c
+@@ -0,0 +1,7 @@
++#include <sys/time.h>
++
++int main(int ac, char** av)
++{
++    struct timeval v;
++    gettimeofday(&v, 0);
++}
+\ No newline at end of file
+diff --git a/codegen.cmake b/codegen.cmake
+new file mode 100755
+index 0000000..ae894ab
+--- /dev/null
++++ b/codegen.cmake
+@@ -0,0 +1,78 @@
++if (${Python_VERSION_MAJOR} EQUAL 2)
++    set(PYTHONPATH "PYTHONPATH=\"${PROJECT_SOURCE_DIR}/src/tool/omniidl/python\"")
++    set(OMNI_PYTHON_RESOURCES ${PROJECT_SOURCE_DIR}/src/lib/omniORB/python)
++else ()
++    set(PYTHONPATH "PYTHONPATH=\"${PROJECT_SOURCE_DIR}/src/tool/omniidl/python3\"")
++    set(OMNI_PYTHON_RESOURCES ${PROJECT_SOURCE_DIR}/src/lib/omniORB/python3)
++endif ()
++
++set(PYTHONPATH_INSTALL "PYTHONPATH=\"\${PACKAGE_PREFIX_DIR}/${PYTHON_SITE}\"")
++set(OMNI_PYTHON_RESOURCES_INSTALL ${PYTHON_SITE})
++
++if (WIN32)
++    if (Python_ROOT_DIR)
++        string(REGEX REPLACE "\\\\" "/" python_root ${Python_ROOT_DIR})
++        set(PYTHONHOME "PYTHONHOME=${python_root}")
++    else ()
++        if (Python_STDLIB)
++            string(REGEX REPLACE "\\\\" "/" python_root ${Python_STDLIB})
++            set(PYTHONHOME "PYTHONHOME=${python_root}/..")
++        else ()
++            set(PYTHONHOME "")
++        endif ()
++    endif ()
++    set(Python_RUNTIME_LIBRARY_DIRS ${Python_RUNTIME_LIBRARY_DIRS} CACHE PATH "The Python runtime library directories")
++    set(PATH_ENV)
++    FOREACH (_PATH ${Python_RUNTIME_LIBRARY_DIRS})
++        set(PATH_ENV "${_PATH}$<SEMICOLON>${PATH_ENV}")
++    ENDFOREACH ()
++    set(PATH_ENV PATH=${PATH_ENV})
++    set(OMNIIDL_PLATFORM_FLAGS "-T")
++
++    set(OMNIORB4_IDL_COMPILER "${CMAKE_COMMAND}" -E env ${PATH_ENV}${CMAKE_BINARY_DIR}/bin ${PYTHONHOME} ${PYTHONPATH} $<TARGET_FILE:omniidl>)
++    set(OMNIIDL_EXEC_INSTALL \${CMAKE_COMMAND} -E env ${PATH_ENV} ${PYTHONHOME} ${PYTHONPATH_INSTALL} $<TARGET_FILE:OmniORB::omniidl>)
++else ()
++    set(OMNIIDL_PLATFORM_FLAGS "")
++    set(OMNIORB4_IDL_COMPILER ${CMAKE_COMMAND} -E env ${PYTHONPATH} ${Python_EXECUTABLE} ${PROJECT_BINARY_DIR}/bin/omniidl)
++    set(OMNIIDL_EXEC_INSTALL \${CMAKE_COMMAND} -E env ${PYTHONPATH_INSTALL} ${Python_EXECUTABLE} \${PACKAGE_PREFIX_DIR}/bin/omniidl)
++endif ()
++
++set(RUN_OMNIIDL_DEPS omniidl omnicpp)
++
++include(cmake/run_omniidl.cmake)
++
++set(GEN_DIR ${PROJECT_BINARY_DIR}/generated/lib/omniORB/omniORB4/)
++set(IDL_DIR ${PROJECT_SOURCE_DIR}/idl/)
++set(SOURCE_FILES)
++
++RUN_OMNIIDL(${IDL_DIR}/Naming.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wba;-Wbdebug" "Naming.hh;NamingDynSK.cc;NamingSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/corbaidl.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba;-nf;-P;-WbF" "corbaidlSK.cc;corbaidlDynSK.cc;corbaidl_poa.hh;corbaidl_operators.hh;corbaidl_defs.hh" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/ir.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba;-WbF" "ir_defs.hh;ir_operators.hh;ir_poa.hh;irDynSK.cc;irSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/boxes.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba;-nf;-P;-WbF" "boxes_defs.hh;boxes_operators.hh;boxes_poa.hh;boxesDynSK.cc;boxesSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/pollable.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba;-nf;-P;-WbF" "pollable_defs.hh;pollable_operators.hh;pollable_poa.hh;pollableDynSK.cc;pollableSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/poa_enums.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba;-nf;-P;-WbF" "poa_enums_defs.hh;poa_enums_operators.hh;poa_enums_poa.hh;poa_enumsDynSK.cc;poa_enumsSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/omniTypedefs.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug" "omniTypedefs.hh;omniTypedefsSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/bootstrap.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba" "bootstrap.hh;bootstrapDynSK.cc;bootstrapSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/omniConnectionData.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug" "omniConnectionData.hh;omniConnectionDataSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/messaging.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug" "messaging.hh;messagingSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/messaging_policy.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug" "messaging_policy.hh;messaging_policySK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/compression.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-Wba" "compression.hh;compressionDynSK.cc;compressionSK.cc" SOURCE_FILES)
++RUN_OMNIIDL(${IDL_DIR}/ziop.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wbdebug;-WbF;-Wba" "ziop_defs.hh;ziop_operators.hh;ziop_poa.hh;ziopDynSK.cc;ziopSK.cc" SOURCE_FILES)
++
++
++ADD_CUSTOM_COMMAND(OUTPUT ${GEN_DIR}/distdate.hh
++        COMMAND ${CMAKE_COMMAND} -E env ${PYTHONPATH} ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/bin/scripts/distdate.py < ${PROJECT_SOURCE_DIR}/update.log > ${GEN_DIR}/distdate.hh
++        DEPENDS ${PROJECT_SOURCE_DIR}/update.log omniidl omnicpp
++        COMMENT "Processing update.log..")
++
++
++ADD_CUSTOM_TARGET(RunGenerator DEPENDS
++        ${SOURCE_FILES}
++        ${GEN_DIR}/distdate.hh
++        COMMENT "Checking if re-generation is required for target omniORB4")
++
++
++INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/generated/lib/omniORB/
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++        FILES_MATCHING PATTERN "*.h*")
++
+diff --git a/contrib/CMakeLists.txt b/contrib/CMakeLists.txt
+new file mode 100644
+index 0000000..f3d9d36
+--- /dev/null
++++ b/contrib/CMakeLists.txt
+@@ -0,0 +1,3 @@
++if (UNIX)
++    add_subdirectory(pkgconfig)
++endif ()
+\ No newline at end of file
+diff --git a/contrib/pkgconfig/CMakeLists.txt b/contrib/pkgconfig/CMakeLists.txt
+new file mode 100644
+index 0000000..57ee393
+--- /dev/null
++++ b/contrib/pkgconfig/CMakeLists.txt
+@@ -0,0 +1,28 @@
++set(prefix ${CMAKE_INSTALL_PREFIX})
++set(exec_prefix \${prefix})
++set(libdir \${exec_prefix}/lib)
++set(includedir \${prefix}/include)
++set(datadir \${prefix}/share)
++set(bindir \${exec_prefix}/bin)
++
++
++configure_file(omniConnectionMgmt4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniConnectionMgmt4.pc @ONLY)
++configure_file(omniCOS4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniCOS4.pc @ONLY)
++configure_file(omniCOSDynamic4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniCOSDynamic4.pc @ONLY)
++configure_file(omniDynamic4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniDynamic4.pc @ONLY)
++configure_file(omniORB4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniORB4.pc @ONLY)
++configure_file(omnithread3.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omnithread3.pc @ONLY)
++configure_file(omniZIOP4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniZIOP4.pc @ONLY)
++configure_file(omniZIOPDynamic4.pc.in ${CMAKE_CURRENT_BINARY_DIR}/omniZIOPDynamic4.pc @ONLY)
++
++
++install(FILES
++        ${CMAKE_CURRENT_BINARY_DIR}/omniConnectionMgmt4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniCOS4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniCOSDynamic4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniDynamic4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniORB4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omnithread3.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniZIOP4.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/omniZIOPDynamic4.pc
++        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+\ No newline at end of file
+diff --git a/include/.gitignore b/include/.gitignore
+new file mode 100644
+index 0000000..57da632
+--- /dev/null
++++ b/include/.gitignore
+@@ -0,0 +1 @@
++/omniconfig.h
+diff --git a/include/omniORB4/.gitignore b/include/omniORB4/.gitignore
+new file mode 100644
+index 0000000..582b538
+--- /dev/null
++++ b/include/omniORB4/.gitignore
+@@ -0,0 +1 @@
++/acconfig.h
+diff --git a/include/omniORB4/CORBA.h b/include/omniORB4/CORBA.h
+index 3077b84..b778c71 100644
+--- a/include/omniORB4/CORBA.h
++++ b/include/omniORB4/CORBA.h
+@@ -45,12 +45,16 @@
+ # error "_OMNIORB_LIBRARY and _OMNIORB_DYNAMIC_LIBRARY are both defined."
+ #endif
+ 
++#ifndef _MSC_VER
++#define _OMNIORB_NTDLL_EXPORT
++#endif
++
+ #if    defined(_OMNIORB_LIBRARY)
+-#         define _core_attr
++#         define _core_attr _OMNIORB_NTDLL_EXPORT
+ #         define _dyn_attr  _OMNIORB_NTDLL_IMPORT
+ #elif  defined(_OMNIORB_DYNAMIC_LIBRARY)
+ #         define _core_attr _OMNIORB_NTDLL_IMPORT
+-#         define _dyn_attr
++#         define _dyn_attr _OMNIORB_NTDLL_EXPORT
+ #else
+ #         define _core_attr _OMNIORB_NTDLL_IMPORT
+ #         define _dyn_attr  _OMNIORB_NTDLL_IMPORT
+diff --git a/include/omniORB4/CORBA_sysdep.h b/include/omniORB4/CORBA_sysdep.h
+index 2140db2..1ab4ec3 100644
+--- a/include/omniORB4/CORBA_sysdep.h
++++ b/include/omniORB4/CORBA_sysdep.h
+@@ -65,6 +65,9 @@ typedef unsigned long omni_ptr_arith_t;
+ #elif SIZEOF_PTR == SIZEOF_INT
+ typedef unsigned int omni_ptr_arith_t;
+ #elif defined (_WIN64)
++#ifdef HAVE_INTTYPES_H
++#include <inttypes.h>
++#endif
+ typedef size_t omni_ptr_arith_t;
+ #else
+ #error "No suitable type to do pointer arithmetic"
+@@ -232,8 +235,10 @@ typedef size_t omni_ptr_arith_t;
+ 
+ #  ifdef _WINSTATIC
+ #    define _OMNIORB_NTDLL_IMPORT
++#    define _OMNIORB_NTDLL_EXPORT
+ #  else
+ #    define _OMNIORB_NTDLL_IMPORT  __declspec(dllimport)
++#    define _OMNIORB_NTDLL_EXPORT  __declspec(dllexport)
+ #  endif
+ 
+ #  if defined(_DEBUG)
+diff --git a/include/omniORB4/acconfig_cmake.h.in b/include/omniORB4/acconfig_cmake.h.in
+new file mode 100644
+index 0000000..0ef25a5
+--- /dev/null
++++ b/include/omniORB4/acconfig_cmake.h.in
+@@ -0,0 +1,346 @@
++#pragma once
++#ifndef HAVE_ALLOCA_H
++#cmakedefine HAVE_ALLOCA_H 1
++#endif
++
++#ifndef HAVE_ALLOCA
++#cmakedefine HAVE_ALLOCA 1
++#endif
++
++#ifndef HAVE_ACCESS
++#cmakedefine HAVE_ACCESS 1
++#endif
++
++#ifndef HAVE_BOOL
++#cmakedefine HAVE_BOOL 1
++#endif
++
++#ifndef HAVE_CATCH_BY_BASE
++#cmakedefine HAVE_CATCH_BY_BASE 1
++#endif
++
++#ifndef HAVE_CONST_CAST
++#cmakedefine HAVE_CONST_CAST 1
++#endif
++
++#ifndef HAVE_DYNAMIC_CAST
++#cmakedefine HAVE_DYNAMIC_CAST 1
++#endif
++
++#ifndef HAVE_REINTERPRET_CAST
++#cmakedefine HAVE_REINTERPRET_CAST 1
++#endif
++
++#ifndef HAVE_MEMBER_CONSTANTS
++#cmakedefine HAVE_MEMBER_CONSTANTS 1
++#endif
++
++#ifndef HAVE_NAMESPACES
++#cmakedefine HAVE_NAMESPACES 1
++#endif
++
++#ifndef HAVE_EXCEPTIONS
++#cmakedefine HAVE_EXCEPTIONS 1
++#endif
++
++#ifndef HAVE_STD
++#cmakedefine HAVE_STD 1
++#endif
++
++#ifndef HAVE_STDIO_H
++#cmakedefine HAVE_STDIO_H 1
++#endif
++
++#ifndef HAVE_SIG_IGN
++#cmakedefine HAVE_SIG_IGN 1
++#endif
++
++#ifndef HAVE_STRUCT_LIFCONF
++#cmakedefine HAVE_STRUCT_LIFCONF 1
++#endif
++
++#ifndef HAVE_STRUCT_LIFCONF
++#cmakedefine HAVE_STRUCT_LIFCONF 1
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN6
++#cmakedefine HAVE_STRUCT_SOCKADDR_IN6 1
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
++#cmakedefine HAVE_STRUCT_SOCKADDR_IN_SIN_LEN 1
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO
++#cmakedefine HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO 1
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_STORAGE
++#cmakedefine HAVE_STRUCT_SOCKADDR_STORAGE 1
++#endif
++
++#ifndef OMNI_SOCKNAME_SIZE_T
++#cmakedefine OMNI_SOCKNAME_SIZE_T @OMNI_SOCKNAME_SIZE_T@
++#endif
++
++/* define if you want to use CFNetwork */
++#ifndef OMNI_USE_CFNETWORK_CONNECT
++#cmakedefine OMNI_USE_CFNETWORK_CONNECT @OMNI_USE_CFNETWORK_CONNECT@
++#endif
++
++#ifndef HAVE_ERRNO_H
++#cmakedefine HAVE_ERRNO_H @HAVE_ERRNO_H@
++#endif
++
++#ifndef HAVE_FCNTL_H
++#cmakedefine HAVE_FCNTL_H @HAVE_FCNTL_H@
++#endif
++
++#ifndef HAVE_GETADDRINFO
++#cmakedefine HAVE_GETADDRINFO @HAVE_GETADDRINFO@
++#endif
++
++#ifndef HAVE_GETHOSTNAME
++#cmakedefine HAVE_GETHOSTNAME @HAVE_GETHOSTNAME@
++#endif
++
++#ifndef HAVE_GETNAMEINFO
++#cmakedefine HAVE_GETNAMEINFO @HAVE_GETNAMEINFO@
++#endif
++
++#ifndef HAVE_GETOPT
++#cmakedefine HAVE_GETOPT @HAVE_GETOPT@
++#endif
++
++#ifndef HAVE_GETTIMEOFDAY
++#cmakedefine HAVE_GETTIMEOFDAY @HAVE_GETTIMEOFDAY@
++#endif
++
++#ifndef GETTIMEOFDAY_TIMEZONE
++#cmakedefine GETTIMEOFDAY_TIMEZONE 1
++#endif
++
++#ifndef HAVE_IFADDRS_H
++#cmakedefine HAVE_IFADDRS_H @HAVE_IFADDRS_H@
++#endif
++
++#ifndef HAVE_INET_NTOP
++#cmakedefine HAVE_INET_NTOP @HAVE_INET_NTOP@
++#endif
++
++#ifndef HAVE_INSINFF
++#cmakedefine HAVE_INSINFF @HAVE_INSINFF@
++#endif
++
++#ifndef HAVE_INTTYPES_H
++#cmakedefine HAVE_INTTYPES_H @HAVE_INTTYPES_H@
++#endif
++
++#ifndef HAVE_ISINF
++#cmakedefine HAVE_ISINF @HAVE_ISINF@
++#endif
++
++#ifndef HAVE_ISINFL
++#cmakedefine HAVE_ISINFL @HAVE_ISINFL@
++#endif
++
++#ifndef HAVE_ISNANORINF
++#cmakedefine HAVE_ISNANORINF @HAVE_ISNANORINF@
++#endif
++
++#ifndef HAVE_LOCALTIME
++#cmakedefine HAVE_LOCALTIME @HAVE_LOCALTIME@
++#endif
++
++#ifndef HAVE_MEMORY_H
++#cmakedefine HAVE_MEMORY_H @HAVE_MEMORY_H@
++#endif
++
++#ifndef HAVE_NANOSLEEP
++#cmakedefine HAVE_NANOSLEEP @HAVE_NANOSLEEP@
++#endif
++
++#ifndef HAVE_NAN_H
++#cmakedefine HAVE_NAN_H @HAVE_NAN_H@
++#endif
++
++#ifndef HAVE_NETDB_H
++#cmakedefine HAVE_NETDB_H @HAVE_NETDB_H@
++#endif
++
++#ifndef HAVE_POLL
++#cmakedefine HAVE_POLL @HAVE_POLL@
++#endif
++
++#ifndef HAVE_RAND_R
++#cmakedefine HAVE_RAND_R @HAVE_RAND_R@
++#endif
++
++#ifndef HAVE_SIGACTION
++#cmakedefine HAVE_SIGACTION @HAVE_SIGACTION@
++#endif
++
++#ifndef HAVE_SIGNAL_H
++#cmakedefine HAVE_SIGNAL_H @HAVE_SIGNAL_H@
++#endif
++
++#ifndef HAVE_SIGVEC
++#cmakedefine HAVE_SIGVEC @HAVE_SIGVEC@
++#endif
++
++#ifndef HAVE_SNPRINTF
++#cmakedefine HAVE_SNPRINTF @HAVE_SNPRINTF@
++#endif
++
++#ifndef HAVE_STDINT_H
++#cmakedefine HAVE_STDINT_H @HAVE_STDINT_H@
++#endif
++
++#ifndef HAVE_STDLIB_H
++#cmakedefine HAVE_STDLIB_H @HAVE_STDLIB_H@
++#endif
++
++#ifndef HAVE_STRCASECMP
++#cmakedefine HAVE_STRCASECMP @HAVE_STRCASECMP@
++#endif
++
++#ifndef HAVE_STRDUP
++#cmakedefine HAVE_STRDUP @HAVE_STRDUP@
++#endif
++
++#ifndef HAVE_STRERROR
++#cmakedefine HAVE_STRERROR @HAVE_STRERROR@
++#endif
++
++#ifndef HAVE_STRFTIME
++#cmakedefine HAVE_STRFTIME @HAVE_STRFTIME@
++#endif
++
++#ifndef HAVE_STRICMP
++#cmakedefine HAVE_STRICMP @HAVE_STRICMP@
++#endif
++
++#ifndef HAVE_STRINGS_H
++#cmakedefine HAVE_STRINGS_H @HAVE_STRINGS_H@
++#endif
++
++#ifndef HAVE_STRING_H
++#cmakedefine HAVE_STRING_H @HAVE_STRING_H@
++#endif
++
++#ifndef HAVE_STRNCASECMP
++#cmakedefine HAVE_STRNCASECMP @HAVE_STRNCASECMP@
++#endif
++
++#ifndef HAVE_STRTOUL
++#cmakedefine HAVE_STRTOUL @HAVE_STRTOUL@
++#endif
++
++#ifndef HAVE_STRTOULL
++#cmakedefine HAVE_STRTOULL @HAVE_STRTOULL@
++#endif
++
++#ifndef HAVE_STRTOUQ
++#cmakedefine HAVE_STRTOUQ @HAVE_STRTOUQ@
++#endif
++
++#ifndef HAVE_SYS_IF_H
++#cmakedefine HAVE_SYS_IF_H @HAVE_SYS_IF_H@
++#endif
++
++#ifndef HAVE_SYS_IOCTL_H
++#cmakedefine HAVE_SYS_IOCTL_H @HAVE_SYS_IOCTL_H@
++#endif
++
++#ifndef HAVE_SYS_PARAM_H
++#cmakedefine HAVE_SYS_PARAM_H @HAVE_SYS_PARAM_H@
++#endif
++
++#ifndef HAVE_SYS_POLL_H
++#cmakedefine HAVE_SYS_POLL_H @HAVE_SYS_POLL_H@
++#endif
++
++#ifndef HAVE_SYS_STAT_H
++#cmakedefine HAVE_SYS_STAT_H @HAVE_SYS_STAT_H@
++#endif
++
++#ifndef HAVE_SYS_TIME_H
++#cmakedefine HAVE_SYS_TIME_H @HAVE_SYS_TIME_H@
++#endif
++
++#ifndef HAVE_SYS_TYPES_H
++#cmakedefine HAVE_SYS_TYPES_H @HAVE_SYS_TYPES_H@
++#endif
++
++#ifndef HAVE_SYS_TYPES_H
++#cmakedefine HAVE_SYS_TYPES_H @HAVE_SYS_TYPES_H@
++#endif
++
++#ifndef HAVE_UNAME
++#cmakedefine HAVE_UNAME @HAVE_UNAME@
++#endif
++
++#ifndef HAVE_UNISTD_H
++#cmakedefine HAVE_UNISTD_H @HAVE_UNISTD_H@
++#endif
++
++#ifndef HAVE_VPRINTF
++#cmakedefine HAVE_VPRINTF @HAVE_VPRINTF@
++#endif
++
++#ifndef HAVE_VSNPRINTF
++#cmakedefine HAVE_VSNPRINTF @HAVE_VSNPRINTF@
++#endif
++
++#ifndef STACK_DIRECTION
++#cmakedefine STACK_DIRECTION @STACK_DIRECTION@
++#endif
++
++
++#cmakedefine SIZEOF_WCHAR_T @SIZEOF_WCHAR_T@
++
++#cmakedefine SIZEOF_BOOL @SIZEOF_BOOL@
++#cmakedefine SIZEOF_CHAR @SIZEOF_CHAR@
++#cmakedefine SIZEOF_DOUBLE @SIZEOF_DOUBLE@
++#cmakedefine SIZEOF_FLOAT @SIZEOF_FLOAT@
++#cmakedefine SIZEOF_INT @SIZEOF_INT@
++#cmakedefine SIZEOF_LONG @SIZEOF_LONG@
++#cmakedefine SIZEOF_LONG_DOUBLE @SIZEOF_LONG_DOUBLE@
++#cmakedefine SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
++#cmakedefine SIZEOF_SHORT @SIZEOF_SHORT@
++#cmakedefine SIZEOF_UNSIGNED_CHAR @SIZEOF_UNSIGNED_CHAR@
++#cmakedefine SIZEOF_VOIDP @SIZEOF_VOIDP@
++
++
++#ifndef STDC_HEADERS
++#cmakedefine STDC_HEADERS @STDC_HEADERS@
++#endif
++
++#cmakedefine WORDS_BIGENDIAN @WORDS_BIGENDIAN@
++
++#ifndef OMNI_LONG_IS_INT
++#cmakedefine OMNI_LONG_IS_INT @OMNI_LONG_IS_INT@
++#endif
++
++
++
++#ifndef OMNIORB_DISABLE_ALLOCA
++#cmakedefine OMNIORB_DISABLE_ALLOCA @OMNIORB_DISABLE_ALLOCA@
++#endif
++
++#ifndef OMNIORB_DISABLE_LONGDOUBLE
++#cmakedefine OMNIORB_DISABLE_LONGDOUBLE @OMNIORB_DISABLE_LONGDOUBLE@
++#endif
++
++#ifndef OMNIORB_ENABLE_LOCK_TRACES
++#cmakedefine OMNIORB_ENABLE_LOCK_TRACES @OMNIORB_ENABLE_LOCK_TRACES@
++#endif
++
++#ifndef OMNI_DISABLE_ATOMIC_OPS
++#cmakedefine OMNI_DISABLE_ATOMIC_OPS @OMNI_DISABLE_ATOMIC_OPS@
++#endif
++
++#ifndef OMNI_DISABLE_IPV6
++#cmakedefine OMNI_DISABLE_IPV6 @OMNI_DISABLE_IPV6@
++#endif
++
+diff --git a/include/omniORB4/aconfig.h b/include/omniORB4/aconfig.h
+new file mode 100644
+index 0000000..f200272
+--- /dev/null
++++ b/include/omniORB4/aconfig.h
+@@ -0,0 +1,253 @@
++#pragma once
++#ifndef HAVE_ALLOCA_H
++#define HAVE_ALLOCA_H
++#endif
++
++#ifndef HAVE_ALLOCA
++/* #undef HAVE_ALLOCA */
++#endif
++
++#ifndef HAVE_ACCESS
++#define HAVE_ACCESS 1
++#endif
++
++#ifndef HAVE_STRUCT_LIFCONF
++/* #undef HAVE_STRUCT_LIFCONF */
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN6
++/* #undef HAVE_STRUCT_SOCKADDR_IN6 */
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
++/* #undef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN */
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO
++/* #undef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO */
++#endif
++
++#ifndef HAVE_STRUCT_SOCKADDR_STORAGE
++/* #undef HAVE_STRUCT_SOCKADDR_STORAGE */
++#endif
++
++#ifndef HAVE_ERRNO_H
++#define HAVE_ERRNO_H 1
++#endif
++
++#ifndef HAVE_FCNTL_H
++#define HAVE_FCNTL_H 1
++#endif
++
++#ifndef HAVE_GETADDRINFO
++#define HAVE_GETADDRINFO 1
++#endif
++
++#ifndef HAVE_GETHOSTNAME
++#define HAVE_GETHOSTNAME 1
++#endif
++
++#ifndef HAVE_GETNAMEINFO
++#define HAVE_GETNAMEINFO 1
++#endif
++
++#ifndef HAVE_GETOPT
++#define HAVE_GETOPT 1
++#endif
++
++#ifndef HAVE_GETTIMEOFDAY
++#define HAVE_GETTIMEOFDAY 1
++#endif
++
++#ifndef HAVE_IFADDRS_H
++#define HAVE_IFADDRS_H 1
++#endif
++
++#ifndef HAVE_INET_NTOP
++#define HAVE_INET_NTOP 1
++#endif
++
++#ifndef HAVE_INSINFF
++/* #undef HAVE_INSINFF */
++#endif
++
++#ifndef HAVE_INTTYPES_H
++#define HAVE_INTTYPES_H 1
++#endif
++
++#ifndef HAVE_ISINF
++#define HAVE_ISINF 1
++#endif
++
++#ifndef HAVE_ISINFL
++#define HAVE_ISINFL 1
++#endif
++
++#ifndef HAVE_ISNANORINF
++/* #undef HAVE_ISNANORINF */
++#endif
++
++#ifndef HAVE_LOCALTIME
++#define HAVE_LOCALTIME 1
++#endif
++
++#ifndef HAVE_MEMORY_H
++#define HAVE_MEMORY_H 1
++#endif
++
++#ifndef HAVE_NANOSLEEP
++#define HAVE_NANOSLEEP 1
++#endif
++
++#ifndef HAVE_NAN_H
++/* #undef HAVE_NAN_H */
++#endif
++
++#ifndef HAVE_NETDB_H
++#define HAVE_NETDB_H 1
++#endif
++
++#ifndef HAVE_POLL
++#define HAVE_POLL 1
++#endif
++
++#ifndef HAVE_RAND_R
++#define HAVE_RAND_R 1
++#endif
++
++#ifndef HAVE_SIGACTION
++#define HAVE_SIGACTION 1
++#endif
++
++#ifndef HAVE_SIGNAL_H
++#define HAVE_SIGNAL_H 1
++#endif
++
++#ifndef HAVE_SIGVEC
++/* #undef HAVE_SIGVEC */
++#endif
++
++#ifndef HAVE_SNPRINTF
++#define HAVE_SNPRINTF 1
++#endif
++
++#ifndef HAVE_STDINT_H
++#define HAVE_STDINT_H 1
++#endif
++
++#ifndef HAVE_STDLIB_H
++#define HAVE_STDLIB_H 1
++#endif
++
++#ifndef HAVE_STRCASECMP
++#define HAVE_STRCASECMP 1
++#endif
++
++#ifndef HAVE_STRDUP
++#define HAVE_STRDUP 1
++#endif
++
++#ifndef HAVE_STRERROR
++#define HAVE_STRERROR 1
++#endif
++
++#ifndef HAVE_STRFTIME
++#define HAVE_STRFTIME 1
++#endif
++
++#ifndef HAVE_STRICMP
++/* #undef HAVE_STRICMP */
++#endif
++
++#ifndef HAVE_STRINGS_H
++#define HAVE_STRINGS_H 1
++#endif
++
++#ifndef HAVE_STRING_H
++#define HAVE_STRING_H 1
++#endif
++
++#ifndef HAVE_STRNCASECMP
++#define HAVE_STRNCASECMP 1
++#endif
++
++#ifndef HAVE_STRTOUL
++#define HAVE_STRTOUL 1
++#endif
++
++#ifndef HAVE_STRTOULL
++#define HAVE_STRTOULL 1
++#endif
++
++#ifndef HAVE_STRTOUQ
++#define HAVE_STRTOUQ 1
++#endif
++
++#ifndef HAVE_SYS_IF_H
++/* #undef HAVE_SYS_IF_H */
++#endif
++
++#ifndef HAVE_SYS_IOCTL_H
++#define HAVE_SYS_IOCTL_H 1
++#endif
++
++#ifndef HAVE_SYS_PARAM_H
++#define HAVE_SYS_PARAM_H 1
++#endif
++
++#ifndef HAVE_SYS_POLL_H
++#define HAVE_SYS_POLL_H 1
++#endif
++
++#ifndef HAVE_SYS_STAT_H
++#define HAVE_SYS_STAT_H 1
++#endif
++
++#ifndef HAVE_SYS_TIME_H
++#define HAVE_SYS_TIME_H 1
++#endif
++
++#ifndef HAVE_SYS_TYPES_H
++#define HAVE_SYS_TYPES_H 1
++#endif
++
++#ifndef HAVE_SYS_TYPES_H
++#define HAVE_SYS_TYPES_H 1
++#endif
++
++#ifndef HAVE_UNAME
++#define HAVE_UNAME 1
++#endif
++
++#ifndef HAVE_UNISTD_H
++#define HAVE_UNISTD_H 1
++#endif
++
++#ifndef HAVE_VPRINTF
++#define HAVE_VPRINTF 1
++#endif
++
++#ifndef HAVE_VSNPRINTF
++#define HAVE_VSNPRINTF 1
++#endif
++
++
++#define SIZEOF_WCHAR_T 4
++/* #undef SIZEOF_BOOL */
++#define SIZEOF_CHAR 1
++#define SIZEOF_DOUBLE 8
++#define SIZEOF_FLOAT 4
++#define SIZEOF_INT 4
++#define SIZEOF_LONG 8
++#define SIZEOF_LONG_DOUBLE 16
++#define SIZEOF_LONG_LONG 8
++#define SIZEOF_SHORT 2
++#define SIZEOF_UNSIGNED_CHAR 1
++#define SIZEOF_VOIDP 8
++
++
++#ifndef STDC_HEADERS
++#define STDC_HEADERS
++#endif
++
++/* #undef WORDS_BIGENDIAN */
+diff --git a/include/omniORB4/internal/codeSetUtil.h b/include/omniORB4/internal/codeSetUtil.h
+index ff1f927..ea23fb1 100644
+--- a/include/omniORB4/internal/codeSetUtil.h
++++ b/include/omniORB4/internal/codeSetUtil.h
+@@ -41,7 +41,7 @@
+ #endif
+ 
+ #if defined(_OMNIORB_LIBRARY)
+-#     define _core_attr
++#     define _core_attr _OMNIORB_NTDLL_EXPORT
+ #else
+ #     define _core_attr _OMNIORB_NTDLL_IMPORT
+ #endif
+diff --git a/include/omniconfig.h.cmake.in b/include/omniconfig.h.cmake.in
+new file mode 100644
+index 0000000..92e4176
+--- /dev/null
++++ b/include/omniconfig.h.cmake.in
+@@ -0,0 +1,53 @@
++/* -*- Mode: C++; -*-
++ *                            Package   : omniORB
++ * omniconfig.h.in            Created on: 2002/07/11
++ *                            Author    : Duncan Grisby (dgrisby)
++ *
++ *    Copyright (C) 2002 Duncan Grisby
++ *
++ *    This file is part of the omniORB library
++ *
++ *    The omniORB library is free software; you can redistribute it and/or
++ *    modify it under the terms of the GNU Lesser General Public
++ *    License as published by the Free Software Foundation; either
++ *    version 2.1 of the License, or (at your option) any later version.
++ *
++ *    This library is distributed in the hope that it will be useful,
++ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *    Library General Public License for more details.
++ *
++ *    You should have received a copy of the GNU Lesser General Public
++ *    License along with this library. If not, see http://www.gnu.org/licenses/
++ *
++ *
++ * Description:
++ *	*** PROPRIETARY INTERFACE ***
++ *
++ *      omniconfig.h used when using autoconf. Copying of this file
++ *      over the non-autoconf version selects the autoconf setup.
++ */
++
++#ifndef __omniconfig_h__
++#define __omniconfig_h__
++#include <omniORB4/acconfig.h>
++
++#define @PLATFORM_DEFINE@ 1
++#define @PROCESSOR_DEFINE@ 1
++#define __OSVERSION__ @OSVERSION@
++
++#ifndef __WIN32__
++#cmakedefine __WIN32__ 1
++#endif
++
++#ifndef _WIN32_WINNT
++#cmakedefine _WIN32_WINNT @_WIN32_WINNT@
++#endif
++
++#undef PACKAGE_BUGREPORT
++#undef PACKAGE_NAME
++#undef PACKAGE_STRING
++#undef PACKAGE_TARNAME
++#undef PACKAGE_VERSION
++
++#endif
+diff --git a/include/omniconfig.h b/include/omniconfig.h_bak
+similarity index 100%
+rename from include/omniconfig.h
+rename to include/omniconfig.h_bak
+diff --git a/package_config.cmake b/package_config.cmake
+new file mode 100644
+index 0000000..eed76a1
+--- /dev/null
++++ b/package_config.cmake
+@@ -0,0 +1,27 @@
++
++set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR})
++set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
++set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
++set(SYSCONFIG_INSTALL_DIR ${CMAKE_INSTALL_SYSCONFDIR})
++set(OMNI_CMAKE_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/)
++
++
++
++include(CMakePackageConfigHelpers)
++
++configure_package_config_file(cmake/OmniORBConfig.cmake.in ${PROJECT_BINARY_DIR}/OmniORBConfig.cmake
++        INSTALL_DESTINATION ${OMNI_CMAKE_INSTALL_DIR}
++        PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
++
++write_basic_package_version_file(${PROJECT_BINARY_DIR}/OmniORBConfigVersion.cmake
++        VERSION ${PROJECT_VERSION}
++        COMPATIBILITY SameMajorVersion)
++
++install(FILES ${CMAKE_SOURCE_DIR}/cmake/run_omniidl.cmake ${CMAKE_CURRENT_BINARY_DIR}/OmniORBConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/OmniORBConfigVersion.cmake
++        DESTINATION ${OMNI_CMAKE_INSTALL_DIR})
++
++
++install(EXPORT ${PROJECT_NAME}Targets
++        NAMESPACE "${PROJECT_NAME}::"
++        DESTINATION ${OMNI_CMAKE_INSTALL_DIR}
++        )
+\ No newline at end of file
+diff --git a/platform_checks.cmake b/platform_checks.cmake
+new file mode 100644
+index 0000000..029c13f
+--- /dev/null
++++ b/platform_checks.cmake
+@@ -0,0 +1,265 @@
++if(${CMAKE_VERSION} VERSION_GREATER "3.12")
++    cmake_policy(SET CMP0075 NEW)
++endif()
++
++INCLUDE(CheckFunctionExists)
++INCLUDE(CheckIncludeFiles)
++INCLUDE(CheckTypeSize)
++INCLUDE(CheckPrototypeDefinition)
++INCLUDE(CheckSymbolExists)
++INCLUDE(TestForSTDNamespace)
++include(${CMAKE_SOURCE_DIR}/cmake/CheckWinVer.cmake)
++
++
++if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
++    set(PROCESSOR_NAME x86Processor)
++    set(PROCESSOR_DEFINE __x86_64__)
++    add_definitions(-D__x86__)
++else ()
++    message(FATAL_ERROR "System: ${CMAKE_SYSTEM_PROCESSOR} not supported")
++endif ()
++
++
++# Variables used in configure_file
++if (WIN32)
++
++    set(OSVERSION "4")
++    set(PLATFORM_DEFINE "__NT__")
++    set(PLATFORM_NAME "Windows")
++    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
++    ##get_WIN32_WINNT(_WIN32_WINNT)
++    set(_WIN32_WINNT 0x0501) # force XP Compatibility for now
++    set(__WIN32__ 1)
++    set(CMAKE_REQUIRED_DEFINITIONS -D__WIN32__ -D__NT__ -D_WIN32_WINNT=${_WIN32_WINNT} -D__OSVERSION__=4)
++    #add_definitions(-D__WIN32__ -D__NT__ -D_WIN32_WINNT=${_WIN32_WINNT} -D__OSVERSION__=4)
++    set(TARGET_DEFINITIONS -D__WIN32__ -D__NT__ -D_WIN32_WINNT=${_WIN32_WINNT} -D__OSVERSION__=4)
++elseif (UNIX AND NOT APPLE)
++    set(OSVERSION "2")
++    set(PLATFORM_DEFINE "__linux__")
++    set(PLATFORM_NAME "Linux")
++else ()
++    message(FATAL_ERROR "System: ${CMAKE_SYSTEM_NAME} not supported")
++endif ()
++
++
++set(CFG_HEADERS)
++set(CFG_LIBS)
++
++macro(CHECK_INCLUDE_AND_ADD header var)
++    CHECK_INCLUDE_FILES("${header}" ${var})
++    if (${var})
++        list(APPEND CFG_HEADERS "${header}")
++        list(APPEND CFG_LIBS ${ARGN})
++    endif ()
++endmacro(CHECK_INCLUDE_AND_ADD)
++
++
++if (NOT ${CMAKE_NO_STD_NAMESPACE})
++    set(HAVE_CATCH_BY_BASE 1)
++    set(HAVE_CONST_CAST 1)
++    set(HAVE_DYNAMIC_CAST 1)
++    set(HAVE_REINTERPRET_CAST 1)
++    set(HAVE_MEMBER_CONSTANTS 1)
++    set(HAVE_NAMESPACES 1)
++    set(HAVE_EXCEPTIONS 1)
++    set(HAVE_STD 1)
++endif ()
++
++
++
++CHECK_INCLUDE_AND_ADD(alloca.h HAVE_ALLOCA_H)
++CHECK_INCLUDE_AND_ADD(signal.h HAVE_SIGNAL_H)
++CHECK_INCLUDE_AND_ADD(errno.h HAVE_ERRNO_H)
++CHECK_INCLUDE_AND_ADD(fcntl.h HAVE_FCNTL_H)
++CHECK_INCLUDE_AND_ADD(ifaddrs.h HAVE_IFADDRS_H)
++CHECK_INCLUDE_AND_ADD(inttypes.h HAVE_INTTYPES_H)
++CHECK_INCLUDE_AND_ADD(memory.h HAVE_MEMORY_H)
++CHECK_INCLUDE_AND_ADD(nan.h HAVE_NAN_H)
++CHECK_INCLUDE_AND_ADD(netdb.h HAVE_NETDB_H)
++CHECK_INCLUDE_AND_ADD(stdint.h HAVE_STDINT_H)
++CHECK_INCLUDE_AND_ADD(stdlib.h HAVE_STDLIB_H)
++CHECK_INCLUDE_AND_ADD(stdio.h HAVE_STDIO_H)
++CHECK_INCLUDE_AND_ADD(stdarg.h HAVE_STDARG_H)
++CHECK_INCLUDE_AND_ADD(strings.h HAVE_STRINGS_H)
++CHECK_INCLUDE_AND_ADD(string.h HAVE_STRING_H)
++CHECK_INCLUDE_AND_ADD(sys/if.h HAVE_SYS_IF_H)
++CHECK_INCLUDE_AND_ADD(sys/ioctl.h HAVE_SYS_IOCTL_H)
++CHECK_INCLUDE_AND_ADD(sys/param.h HAVE_SYS_PARAM_H)
++CHECK_INCLUDE_AND_ADD(sys/poll.h HAVE_SYS_POLL_H)
++CHECK_INCLUDE_AND_ADD(sys/stat.h HAVE_SYS_STAT_H)
++if (NOT WIN32) # TODO Fix in Code
++    CHECK_INCLUDE_AND_ADD(sys/time.h HAVE_SYS_TIME_H)
++endif ()
++CHECK_INCLUDE_AND_ADD(sys/types.h HAVE_SYS_TYPES_H)
++CHECK_INCLUDE_AND_ADD(unistd.h HAVE_UNISTD_H)
++CHECK_INCLUDE_AND_ADD("winsock2.h;ws2tcpip.h" HAVE_WINSOCKS2_H ws2_32 mswsock)
++CHECK_INCLUDE_AND_ADD("sys/socket.h;netinet/in.h" HAVE_SOCKET_H)
++if (NOT WIN32) # TODO Fix in Code
++    CHECK_INCLUDE_AND_ADD("sys/time.h;time.h" TIME_WITH_SYS_TIME)
++endif ()
++
++set(CMAKE_REQUIRED_LIBRARIES "${CFG_LIBS}")
++set(CMAKE_EXTRA_INCLUDE_FILES "${CFG_HEADERS}")
++
++CHECK_SYMBOL_EXISTS(SIG_IGN "${CFG_HEADERS}" HAVE_SIG_IGN)
++CHECK_SYMBOL_EXISTS(alloca "${CFG_HEADERS}" HAVE_ALLOCA)
++CHECK_SYMBOL_EXISTS(access "${CFG_HEADERS}" HAVE_ACCESS)
++CHECK_SYMBOL_EXISTS(getnameinfo "${CFG_HEADERS}" HAVE_GETNAMEINFO)
++CHECK_SYMBOL_EXISTS(inet_ntop "${CFG_HEADERS}" HAVE_INET_NTOP)
++CHECK_SYMBOL_EXISTS(insinff "${CFG_HEADERS}" HAVE_INSINFF)
++CHECK_SYMBOL_EXISTS(isinf "${CFG_HEADERS}" HAVE_ISINF)
++CHECK_SYMBOL_EXISTS(isinfl "${CFG_HEADERS}" HAVE_ISINFL)
++CHECK_SYMBOL_EXISTS(IsNANorINF "${CFG_HEADERS}" HAVE_ISNANORINF)
++CHECK_SYMBOL_EXISTS(localtime "${CFG_HEADERS}" HAVE_LOCALTIME)
++CHECK_SYMBOL_EXISTS(nanosleep "${CFG_HEADERS}" HAVE_NANOSLEEP)
++CHECK_SYMBOL_EXISTS(poll "${CFG_HEADERS}" HAVE_POLL)
++CHECK_SYMBOL_EXISTS(rand_r "${CFG_HEADERS}" HAVE_RAND_R)
++CHECK_SYMBOL_EXISTS(sigaction "${CFG_HEADERS}" HAVE_SIGACTION)
++CHECK_SYMBOL_EXISTS(sigvec "${CFG_HEADERS}" HAVE_SIGVEC)
++CHECK_SYMBOL_EXISTS(snprintf "${CFG_HEADERS}" HAVE_SNPRINTF)
++CHECK_SYMBOL_EXISTS(strcasecmp "${CFG_HEADERS}" HAVE_STRCASECMP)
++CHECK_SYMBOL_EXISTS(strdup "${CFG_HEADERS}" HAVE_STRDUP)
++CHECK_SYMBOL_EXISTS(strerror "${CFG_HEADERS}" HAVE_STRERROR)
++CHECK_SYMBOL_EXISTS(strftime "${CFG_HEADERS}" HAVE_STRFTIME)
++CHECK_SYMBOL_EXISTS(stricmp "${CFG_HEADERS}" HAVE_STRICMP)
++CHECK_SYMBOL_EXISTS(strncasecmp "${CFG_HEADERS}" HAVE_STRNCASECMP)
++CHECK_SYMBOL_EXISTS(strtoul "${CFG_HEADERS}" HAVE_STRTOUL)
++CHECK_SYMBOL_EXISTS(strtoull "${CFG_HEADERS}" HAVE_STRTOULL)
++CHECK_SYMBOL_EXISTS(strtouq "${CFG_HEADERS}" HAVE_STRTOUQ)
++CHECK_SYMBOL_EXISTS(uname "${CFG_HEADERS}" HAVE_UNAME)
++CHECK_SYMBOL_EXISTS(vprintf "${CFG_HEADERS}" HAVE_VPRINTF)
++CHECK_SYMBOL_EXISTS(vsnprintf "${CFG_HEADERS}" HAVE_VSNPRINTF)
++CHECK_SYMBOL_EXISTS(getaddrinfo "${CFG_HEADERS}" HAVE_GETADDRINFO)
++CHECK_SYMBOL_EXISTS(gethostname "${CFG_HEADERS}" HAVE_GETHOSTNAME)
++CHECK_SYMBOL_EXISTS(getopt "${CFG_HEADERS}" HAVE_GETOPT)
++CHECK_SYMBOL_EXISTS(gettimeofday "${CFG_HEADERS}" HAVE_GETTIMEOFDAY)
++
++CHECK_TYPE_SIZE("struct lifconf" STRUCT_LIFCONF)
++CHECK_TYPE_SIZE("struct sockaddr_in6" HAVE_STRUCT_SOCKADDR_IN6)
++CHECK_TYPE_SIZE("((struct sockaddr_in*)0)->sin_len" HAVE_STRUCT_SOCKADDR_IN_SIN_LEN)
++CHECK_TYPE_SIZE("((struct sockaddr_in*)0)->sin_zero" HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO)
++CHECK_TYPE_SIZE("struct sockaddr_storage" HAVE_STRUCT_SOCKADDR_STORAGE)
++if (NOT WIN32) # TODO Fix in Code
++    try_compile(GETTIMEOFDAY_TIMEZONE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/cmake/timeofdayTimezone.c)
++endif ()
++CHECK_TYPE_SIZE("socklen_t" SOCKLEN_T_EXISTS)
++if (SOCKLEN_T_EXISTS)
++    set(OMNI_SOCKNAME_SIZE_T socklen_t)
++endif ()
++
++set(CMAKE_EXTRA_INCLUDE_FILES)
++
++CHECK_TYPE_SIZE("wchar_t" SIZEOF_WCHAR_T)
++CHECK_TYPE_SIZE("bool" SIZEOF_BOOL LANGUAGE CXX)
++CHECK_TYPE_SIZE("bool" HAVE_BOOL LANGUAGE CXX)
++CHECK_TYPE_SIZE("char" SIZEOF_CHAR)
++CHECK_TYPE_SIZE("double" SIZEOF_DOUBLE)
++CHECK_TYPE_SIZE("float" SIZEOF_FLOAT)
++CHECK_TYPE_SIZE("int" SIZEOF_INT)
++CHECK_TYPE_SIZE("long" SIZEOF_LONG)
++CHECK_TYPE_SIZE("long double" SIZEOF_LONG_DOUBLE)
++CHECK_TYPE_SIZE("long long" SIZEOF_LONG_LONG)
++CHECK_TYPE_SIZE("short" SIZEOF_SHORT)
++CHECK_TYPE_SIZE("unsigned char" SIZEOF_UNSIGNED_CHAR)
++CHECK_TYPE_SIZE("void*" SIZEOF_VOIDP)
++
++
++option(OMNIORB_DISABLE_ALLOCA "define if you want to avoid use of alloca" OFF)
++option(OMNIORB_DISABLE_LONGDOUBLE "define if you want to disable long double support" OFF)
++option(OMNIORB_ENABLE_LOCK_TRACES "if you want mutexes to be traced" OFF)
++option(OMNI_DISABLE_ATOMIC_OPS "define if you want to disable atomic operations" OFF)
++option(OMNI_DISABLE_IPV6 "define if you want to disable IPv6 support" OFF)
++option(OMNI_USE_CFNETWORK_CONNECT "enable use of Mac / iOS CFNetwork (default disable-cfnetwork)" OFF)
++
++
++#/* define if the compiler supports covariant return types */
++#define OMNI_HAVE_COVARIANT_RETURNS /**/
++
++#/* define if __sync_add_and_fetch and __sync_sub_and_fetch are available */
++#define OMNI_HAVE_SYNC_ADD_AND_FETCH /**/
++
++# TODO Unused in Code?
++#/* define if base constructors have to be fully qualified */
++#/* #undef OMNI_REQUIRES_FQ_BASE_CTOR */
++
++
++# used for PackageConfig
++# TODO generate PackageConfig files
++set(PACKAGE_VERSION ${PROJECT_VERSION})
++
++if (SIZEOF_LONG EQUAL SIZEOF_INT)
++    set(OMNI_LONG_IS_INT 1)
++endif ()
++
++
++include(cmake/CheckStackDirection.cmake)
++CHECK_STACK_DIRECTION(STACK_DIRECTION)
++
++#/* Define to 1 if you have the ANSI C header files. */
++include(cmake/CheckHeaderSTDC.cmake)
++CHECK_HEADER_STDC(STDC_HEADERS)
++
++
++INCLUDE(TestBigEndian)
++TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
++
++#ase "$host" in
++#*-*-linux-*)   plat_name="Linux";    plat_def="__linux__";    os_v="2";;
++#*-*-uclinux-*) plat_name="Linux";    plat_def="__linux__";    os_v="2";;
++#*-*-cygwin*)   plat_name="Cygwin";   plat_def="__cygwin__";   os_v="1";;
++#*-*-solaris*)  plat_name="SunOS";    plat_def="__sunos__";    os_v="5";;
++#*-*-osf3*)     plat_name="OSF1";     plat_def="__osf1__";     os_v="3";;
++#*-*-osf4*)     plat_name="OSF1";     plat_def="__osf1__";     os_v="4";;
++#*-*-osf5*)     plat_name="OSF1";     plat_def="__osf1__";     os_v="5";;
++#*-*-hpux10*)   plat_name="HPUX";     plat_def="__hpux__";     os_v="10";;
++#*-*-hpux11*)   plat_name="HPUX";     plat_def="__hpux__";     os_v="11";;
++#*-*-nextstep*) plat_name="NextStep"; plat_def="__nextstep__"; os_v="3";;
++#*-*-openstep*) plat_name="NextStep"; plat_def="__nextstep__"; os_v="3";;
++#*-*-irix*)     plat_name="IRIX";     plat_def="__irix__";     os_v="6";;
++#*-*-aix*)      plat_name="AIX";      plat_def="__aix__";      os_v="4";;
++#*-*-darwin*)   plat_name="Darwin";   plat_def="__darwin__";   os_v="1";;
++#*-*-freebsd3*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="3";;
++#*-*-freebsd4*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="4";;
++#*-*-freebsd5*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="5";;
++#*-*-freebsd6*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="6";;
++#*-*-freebsd7*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="7";;
++#*-*-freebsd8*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="8";;
++#*-*-kfreebsd*) plat_name="kFreeBSD";  plat_def="__FreeBSD_kernel__";  os_v="6";;
++#*-*-netbsd*)   plat_name="NetBSD";   plat_def="__netbsd__";   os_v="1";;
++#*-*-openbsd*)  plat_name="OpenBSD";  plat_def="__openbsd__";  os_v="3";;
++#*-*-sco*)      plat_name="OSR5";     plat_def="__osr5__";     os_v="5";;
++#*-*-gnu*)      plat_name="GNU";      plat_def="__hurd__" ;    os_v="0";;
++#esac
++
++#case "$host" in
++#i?86-*)   proc_name="x86Processor";     proc_def="__x86__";;
++#x86_64-*) proc_name="x8664Processor";   proc_def="__x86_64__";;
++#sparc-*)  proc_name="SparcProcessor";   proc_def="__sparc__";;
++#alpha*)   proc_name="AlphaProcessor";   proc_def="__alpha__";;
++#m68k-*)   proc_name="m68kProcessor";    proc_def="__m68k__";;
++#mips*)    proc_name="IndigoProcessor";  proc_def="__mips__";;
++#arm-*)    proc_name="ArmProcessor";     proc_def="__arm__";;
++#s390-*)   proc_name="s390Processor";    proc_def="__s390__";;
++#ia64-*)   proc_name="ia64Processor";    proc_def="__ia64__";;
++#hppa*)    proc_name="HppaProcessor";    proc_def="__hppa__";;
++#powerpc*) proc_name="PowerPCProcessor"; proc_def="__powerpc__";;
++#esac
++
++
++
++if (CMAKE_CXX_COMPILER_ID MATCHES "clang")
++    # using Clang
++elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
++    # using GCC
++    set(COMPILE_FLAG_WNO_UNUSED -Wno-unused)
++    set(COMPILE_FLAG_FEXCEPTIONS -fexceptions)
++    set(COMPILE_FLAG_FPERMISSIVE -fpermissive)
++    set(COMPILE_FLAG_WNO_WRITE_STRINGS -Wno-write-strings)
++elseif (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
++    # using Intel C++
++elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
++    # using Visual Studio C++
++endif ()
++
++configure_file(include/omniconfig.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/omniconfig.h)
++configure_file(include/omniORB4/acconfig_cmake.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/omniORB4/acconfig.h)
+\ No newline at end of file
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+new file mode 100755
+index 0000000..ed18599
+--- /dev/null
++++ b/src/CMakeLists.txt
+@@ -0,0 +1,6 @@
++add_subdirectory(tool)
++add_subdirectory(appl)
++add_subdirectory(lib)
++add_subdirectory(services)
++add_subdirectory(examples)
++
+diff --git a/src/appl/CMakeLists.txt b/src/appl/CMakeLists.txt
+new file mode 100755
+index 0000000..2f23b78
+--- /dev/null
++++ b/src/appl/CMakeLists.txt
+@@ -0,0 +1,3 @@
++add_subdirectory(omniMapper)
++add_subdirectory(omniNames)
++add_subdirectory(utils)
+diff --git a/src/appl/omniMapper/CMakeLists.txt b/src/appl/omniMapper/CMakeLists.txt
+new file mode 100644
+index 0000000..3824a42
+--- /dev/null
++++ b/src/appl/omniMapper/CMakeLists.txt
+@@ -0,0 +1,20 @@
++set(OMNIMAPPER_EXE_SRC
++    omniMapper.cc)
++
++set(CONFIG_FILE_ENV_VAR CONFIG_FILE_ENV_VAR=\"OMNIMAPPER_CONFIG\")
++if(WIN32)
++set(CONFIG_FILE_DEFAULT CONFIG_FILE_DEFAULT=\"C:\\\\omniMapper.cfg\")
++    else()
++set(CONFIG_FILE_DEFAULT CONFIG_FILE_DEFAULT=\"/etc/omniMapper.cfg\")
++endif()
++
++add_executable(omniMapper ${OMNIMAPPER_EXE_SRC})
++target_link_libraries(omniMapper PRIVATE omnithread omniORB4)
++target_compile_definitions(omniMapper PRIVATE  ${CONFIG_FILE_ENV_VAR} ${CONFIG_FILE_DEFAULT})
++target_include_directories(omniMapper PRIVATE ${PROJECT_BINARY_DIR}/generated/lib/omniORB ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(omniMapper PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++
++install(TARGETS omniMapper
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/appl/omniNames/CMakeLists.txt b/src/appl/omniNames/CMakeLists.txt
+new file mode 100644
+index 0000000..11d7485
+--- /dev/null
++++ b/src/appl/omniNames/CMakeLists.txt
+@@ -0,0 +1,31 @@
++set(OMNINAMES_EXE_SRC
++        omniNames.cc
++        NamingContext_i.cc
++        log.cc
++        omniNamesWin.cc)
++
++
++if (OMNINAMES_LOG_DEFAULT_LOCATION)
++    set(DEFAULT_LOGDIR DEFAULT_LOGDIR=${OMNINAMES_LOG_DEFAULT_LOCATION})
++else ()
++    if (WIN32)
++        set(DEFAULT_LOGDIR DEFAULT_LOGDIR=\"C:\\\\TEMP\")
++    else ()
++        set(DEFAULT_LOGDIR DEFAULT_LOGDIR=\"/var/omniNames\")
++        INSTALL(CODE "FILE(MAKE_DIRECTORY /var/omniNames)")
++    endif ()
++endif ()
++
++
++add_executable(omniNames ${OMNINAMES_EXE_SRC})
++target_link_libraries(omniNames PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(omniNames PRIVATE  ${DEFAULT_LOGDIR})
++target_include_directories(omniNames PRIVATE . ${PROJECT_SOURCE_DIR}/include/include ${PROJECT_BINARY_DIR}/generated/lib/omniORB)
++target_compile_options(omniNames PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++
++
++install(TARGETS omniNames
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++
+diff --git a/src/appl/utils/CMakeLists.txt b/src/appl/utils/CMakeLists.txt
+new file mode 100755
+index 0000000..8daa847
+--- /dev/null
++++ b/src/appl/utils/CMakeLists.txt
+@@ -0,0 +1,4 @@
++add_subdirectory(catior)
++add_subdirectory(convertior)
++add_subdirectory(genior)
++add_subdirectory(nameclt)
+diff --git a/src/appl/utils/catior/CMakeLists.txt b/src/appl/utils/catior/CMakeLists.txt
+new file mode 100644
+index 0000000..bdb135f
+--- /dev/null
++++ b/src/appl/utils/catior/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(CATIOR_EXE_SRC
++    catior.cc)
++add_executable(catior ${CATIOR_EXE_SRC})
++target_link_libraries(catior PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(catior PRIVATE  )
++target_include_directories(catior PRIVATE ${PROJECT_BINARY_DIR}/generated/lib/omniORB ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(catior PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++
++install(TARGETS catior
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/appl/utils/convertior/CMakeLists.txt b/src/appl/utils/convertior/CMakeLists.txt
+new file mode 100644
+index 0000000..474f8a5
+--- /dev/null
++++ b/src/appl/utils/convertior/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(CONVERTIOR_EXE_SRC
++    convertior.cc)
++add_executable(convertior ${CONVERTIOR_EXE_SRC})
++target_link_libraries(convertior PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(convertior PRIVATE  )
++target_include_directories(convertior PRIVATE ${PROJECT_BINARY_DIR}/generated/lib/omniORB ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(convertior PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++
++install(TARGETS convertior
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/appl/utils/genior/CMakeLists.txt b/src/appl/utils/genior/CMakeLists.txt
+new file mode 100644
+index 0000000..d675b36
+--- /dev/null
++++ b/src/appl/utils/genior/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(GENIOR_EXE_SRC
++    genior.cc)
++add_executable(genior ${GENIOR_EXE_SRC})
++target_link_libraries(genior PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(genior PRIVATE  )
++target_include_directories(genior PRIVATE ${PROJECT_BINARY_DIR}/generated/lib/omniORB ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(genior PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++
++install(TARGETS genior
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/appl/utils/nameclt/CMakeLists.txt b/src/appl/utils/nameclt/CMakeLists.txt
+new file mode 100644
+index 0000000..481a677
+--- /dev/null
++++ b/src/appl/utils/nameclt/CMakeLists.txt
+@@ -0,0 +1,12 @@
++set(NAMECLT_EXE_SRC
++    nameclt.cc)
++add_executable(nameclt ${NAMECLT_EXE_SRC})
++target_link_libraries(nameclt PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(nameclt PRIVATE  )
++target_include_directories(nameclt PRIVATE ${PROJECT_BINARY_DIR}/generated/lib/omniORB ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(nameclt PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++
++install(TARGETS nameclt
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/examples/CMakeLists.txt b/src/examples/CMakeLists.txt
+new file mode 100644
+index 0000000..e7bf615
+--- /dev/null
++++ b/src/examples/CMakeLists.txt
+@@ -0,0 +1 @@
++add_subdirectory(valuetype)
+diff --git a/src/examples/valuetype/CMakeLists.txt b/src/examples/valuetype/CMakeLists.txt
+new file mode 100644
+index 0000000..c01ac80
+--- /dev/null
++++ b/src/examples/valuetype/CMakeLists.txt
+@@ -0,0 +1 @@
++add_subdirectory(simple)
+diff --git a/src/examples/valuetype/simple/CMakeLists.txt b/src/examples/valuetype/simple/CMakeLists.txt
+new file mode 100644
+index 0000000..8be16b7
+--- /dev/null
++++ b/src/examples/valuetype/simple/CMakeLists.txt
+@@ -0,0 +1,25 @@
++
++set(GEN_DIR ${PROJECT_BINARY_DIR}/generated/lib/omniORB/omniORB4/)
++set(IDL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
++
++RUN_OMNIIDL(${IDL_DIR}/value.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl "-Wba;-Wbdebug" "value.hh;valueSK.cc" SOURCE_FILES)
++
++add_executable(vserver vserver.cc ${GEN_DIR}/valueSK.cc ${GEN_DIR}/value.hh)
++add_executable(vclient vclient.cc ${GEN_DIR}/valueSK.cc ${GEN_DIR}/value.hh)
++add_executable(vcoloc vcoloc.cc ${GEN_DIR}/valueSK.cc ${GEN_DIR}/value.hh)
++
++target_link_libraries(vserver PRIVATE omniORB4 omnithread omniDynamic4 Threads::Threads)
++target_compile_definitions(vserver PRIVATE  ${DEFAULT_LOGDIR})
++target_include_directories(vserver PRIVATE . ${PROJECT_SOURCE_DIR}/include ${GEN_DIR})
++target_compile_options(vserver PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++
++target_link_libraries(vclient PRIVATE omniORB4 omnithread omniDynamic4 Threads::Threads)
++target_compile_definitions(vclient PRIVATE  ${DEFAULT_LOGDIR})
++target_include_directories(vclient PRIVATE . ${PROJECT_SOURCE_DIR}/include ${GEN_DIR})
++target_compile_options(vclient PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++
++
++target_link_libraries(vcoloc PRIVATE omniORB4 omnithread omniDynamic4 Threads::Threads)
++target_compile_definitions(vcoloc PRIVATE  ${DEFAULT_LOGDIR})
++target_include_directories(vcoloc PRIVATE . ${PROJECT_SOURCE_DIR}/include ${GEN_DIR})
++target_compile_options(vcoloc PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
+diff --git a/src/lib/CMakeLists.txt b/src/lib/CMakeLists.txt
+new file mode 100755
+index 0000000..a0fcd2d
+--- /dev/null
++++ b/src/lib/CMakeLists.txt
+@@ -0,0 +1,2 @@
++add_subdirectory(omniORB)
++add_subdirectory(omnithread)
+diff --git a/src/lib/omniORB/CMakeLists.txt b/src/lib/omniORB/CMakeLists.txt
+new file mode 100755
+index 0000000..8da356b
+--- /dev/null
++++ b/src/lib/omniORB/CMakeLists.txt
+@@ -0,0 +1,18 @@
++add_subdirectory(codesets)
++add_subdirectory(connections)
++add_subdirectory(dynamic)
++add_subdirectory(orbcore)
++add_subdirectory(ziop)
++add_subdirectory(ziopdynamic)
++
++if (${Python_VERSION_MAJOR} EQUAL 2)
++    install(DIRECTORY
++            ${CMAKE_CURRENT_SOURCE_DIR}/python/
++            DESTINATION ${PYTHON_SITE}
++            FILES_MATCHING PATTERN "*.py")
++else ()
++    install(DIRECTORY
++            ${CMAKE_CURRENT_SOURCE_DIR}/python3/
++            DESTINATION ${PYTHON_SITE}
++            FILES_MATCHING PATTERN "*.py")
++endif ()
+\ No newline at end of file
+diff --git a/src/lib/omniORB/codesets/CMakeLists.txt b/src/lib/omniORB/codesets/CMakeLists.txt
+new file mode 100644
+index 0000000..47f44c5
+--- /dev/null
++++ b/src/lib/omniORB/codesets/CMakeLists.txt
+@@ -0,0 +1,53 @@
++set(OMNICODESETS4_SRC
++    cs-8859-2.cc
++    cs-8859-3.cc
++    cs-8859-4.cc
++    cs-8859-5.cc
++    cs-8859-6.cc
++    cs-8859-7.cc
++    cs-8859-8.cc
++    cs-8859-9.cc
++    cs-8859-10.cc
++    cs-8859-11.cc
++    cs-8859-13.cc
++    cs-8859-14.cc
++    cs-8859-15.cc
++    cs-8859-16.cc
++    cs-UCS-4.cc
++    cs-cp1250.cc
++    cs-cp1251.cc
++    cs-cp1252.cc
++    cs-cp1253.cc
++    cs-cp1254.cc
++    cs-cp1255.cc
++    cs-cp1256.cc
++    cs-cp1257.cc
++    cs-cp1258.cc
++    cs-037.cc
++    cs-500.cc
++    cs-EDF-4.cc
++    cs-GBK.cc
++    omniCodeSets.cc)
++add_library(omniCodeSets4_static STATIC ${OMNICODESETS4_SRC})
++target_link_libraries(omniCodeSets4_static PRIVATE omniORB4_static omnithread_static Threads::Threads)
++target_compile_definitions(omniCodeSets4_static PRIVATE USE_omniORB_logStream)
++target_compile_options(omniCodeSets4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++if (WIN32)
++    set_target_properties(omniCodeSets4_static PROPERTIES OUTPUT_NAME "omniCodeSets4")
++endif()
++
++
++add_library(omniCodeSets4 SHARED ${OMNICODESETS4_SRC})
++target_link_libraries(omniCodeSets4 PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(omniCodeSets4 PRIVATE USE_omniORB_logStream)
++target_compile_options(omniCodeSets4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS}  )
++if (WIN32)
++    set_target_properties(omniCodeSets4 PROPERTIES OUTPUT_NAME "omniCodeSets4_rt")
++endif()
++
++
++install(TARGETS omniCodeSets4_static omniCodeSets4
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+\ No newline at end of file
+diff --git a/src/lib/omniORB/connections/CMakeLists.txt b/src/lib/omniORB/connections/CMakeLists.txt
+new file mode 100644
+index 0000000..35f2157
+--- /dev/null
++++ b/src/lib/omniORB/connections/CMakeLists.txt
+@@ -0,0 +1,30 @@
++
++set(OMNICONNECTIONMGMT4_SRC
++        omniConnectionMgmt.cc
++        dataStub.cc
++        )
++
++add_library(omniConnectionMgmt4_static STATIC ${OMNICONNECTIONMGMT4_SRC})
++target_link_libraries(omniConnectionMgmt4_static PRIVATE omniORB4_static omnithread_static Threads::Threads)
++target_compile_definitions(omniConnectionMgmt4_static PRIVATE )
++target_compile_options(omniConnectionMgmt4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(omniConnectionMgmt4_static PROPERTIES OUTPUT_NAME "omniConnectionMgmt4")
++endif()
++
++
++add_library(omniConnectionMgmt4 SHARED ${OMNICONNECTIONMGMT4_SRC})
++target_link_libraries(omniConnectionMgmt4 PRIVATE omniORB4 omnithread Threads::Threads)
++target_compile_definitions(omniConnectionMgmt4 PRIVATE )
++target_compile_options(omniConnectionMgmt4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(omniConnectionMgmt4 PROPERTIES OUTPUT_NAME "omniConnectionMgmt4_rt")
++endif()
++
++
++
++install(TARGETS omniConnectionMgmt4_static omniConnectionMgmt4
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+\ No newline at end of file
+diff --git a/src/lib/omniORB/dynamic/CMakeLists.txt b/src/lib/omniORB/dynamic/CMakeLists.txt
+new file mode 100644
+index 0000000..54eee78
+--- /dev/null
++++ b/src/lib/omniORB/dynamic/CMakeLists.txt
+@@ -0,0 +1,64 @@
++set(OMNIDYNAMIC4_SRC
++    ami.cc
++    valueBase.cc
++    valueFactory.cc
++    valueTracker.cc
++    valueType.cc
++    unknownValue.cc
++    abstractBase.cc
++    any.cc
++    anyStream.cc
++    constants.cc
++    context.cc
++    contextList.cc
++    dynamicImplementation.cc
++    dynamicLib.cc
++    dynAny.cc
++    dynAnyNil.cc
++    dynException.cc
++    environment.cc
++    exceptionList.cc
++    namedValue.cc
++    nvList.cc
++    policy.cc
++    pseudoBase.cc
++    request.cc
++    orbMultiRequest.cc
++    serverRequest.cc
++    tcParser.cc
++    typecode.cc
++    unknownUserExn.cc
++    poastub.cc
++    bootstrapdynstub.cc
++    corbaidldynstub.cc
++    corbaidlstub.cc
++    irstub.cc
++    ir.cc
++    irdynstub.cc
++    Namingdynstub.cc
++    boxes.cc
++    pollablestub.cc
++    messagingstub.cc
++    omniTypedefs.cc)
++add_library(omniDynamic4_static STATIC ${OMNIDYNAMIC4_SRC})
++target_link_libraries(omniDynamic4_static PUBLIC omniORB4_static omnithread_static Threads::Threads)
++target_compile_definitions(omniDynamic4_static PRIVATE USE_omniORB_logStream _OMNIORB_DYNAMIC_LIBRARY)
++target_compile_options(omniDynamic4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} )
++if (WIN32)
++    set_target_properties(omniDynamic4_static PROPERTIES OUTPUT_NAME "omniDynamic4")
++endif()
++
++
++add_library(omniDynamic4 SHARED ${OMNIDYNAMIC4_SRC})
++target_link_libraries(omniDynamic4 PUBLIC omniORB4 omnithread Threads::Threads)
++target_compile_definitions(omniDynamic4 PRIVATE USE_omniORB_logStream _OMNIORB_DYNAMIC_LIBRARY)
++target_compile_options(omniDynamic4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS}  )
++if (WIN32)
++    set_target_properties(omniDynamic4 PROPERTIES OUTPUT_NAME "omniDynamic4_rt")
++endif()
++
++install(TARGETS omniDynamic4_static omniDynamic4
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+\ No newline at end of file
+diff --git a/src/lib/omniORB/orbcore/CMakeLists.txt b/src/lib/omniORB/orbcore/CMakeLists.txt
+new file mode 100644
+index 0000000..615273e
+--- /dev/null
++++ b/src/lib/omniORB/orbcore/CMakeLists.txt
+@@ -0,0 +1,224 @@
++set(GIOP_SRCS
++        omniTransport.cc
++        cdrStream.cc
++        cdrStreamAdapter.cc
++        cdrMemoryStream.cc
++        cdrValueChunkStream.cc
++        giopEndpoint.cc
++        giopRope.cc
++        giopStrand.cc
++        giopStream.cc
++        giopServer.cc
++        giopWorker.cc
++        giopRendezvouser.cc
++        GIOP_C.cc
++        GIOP_S.cc
++        giopStreamImpl.cc
++        giopImpl10.cc
++        giopImpl11.cc
++        giopImpl12.cc
++        giopBiDir.cc
++        giopMonitor.cc
++        SocketCollection.cc)
++
++set(TRANSPORT_SRCS
++        tcpSocket.cc
++        tcp/tcpTransportImpl.cc
++        tcp/tcpConnection.cc
++        tcp/tcpEndpoint.cc
++        tcp/tcpAddress.cc
++        tcp/tcpActive.cc)
++
++set(UNIXSOCK_SRCS
++        unix/unixTransportImpl.cc
++        unix/unixConnection.cc
++        unix/unixEndpoint.cc
++        unix/unixAddress.cc
++        unix/unixActive.cc)
++
++set(SSL_SRCS
++        ssl/sslActive.cc
++        ssl/sslAddress.cc
++        ssl/sslConnection.cc
++        ssl/sslEndpoint.cc
++        ssl/sslTransportImpl.cc
++        ssl/sslContext.cc)
++
++set(CODESET_SRCS
++        codeSets.cc
++        cs-8bit.cc
++        cs-16bit.cc
++        cs-8859-1.cc
++        cs-UTF-8.cc
++        cs-UTF-16.cc)
++
++set(BUILTIN_STUB_SRCS
++        bootstrapstub.cc
++        objectStub.cc
++        poastubs.cc)
++
++if (vxWorksPlatform)
++    #ifndef vxNamesRequired
++    #BUILTIN_STUB_SRCS += Namingstub.cc
++    #endif
++else ()
++    set(BUILTIN_STUB_SRCS ${BUILTIN_STUB_SRCS} Namingstub.cc)
++endif ()
++
++set(ORB_SRCS
++        anonObject.cc
++        callDescriptor.cc
++        constants.cc
++        corbaObject.cc
++        corbaBoa.cc
++        corbaOrb.cc
++        corbaFixed.cc
++        corbaString.cc
++        corbaWString.cc
++        current.cc
++        dynamicLib.cc
++        exception.cc
++        exceptn.cc
++        initRefs.cc
++        interceptors.cc
++        invoker.cc
++        ior.cc
++        libcWrapper.cc
++        omniIdentity.cc
++        localIdentity.cc
++        localObject.cc
++        logIOstream.cc
++        minorCode.cc
++        objectAdapter.cc
++        omniInternal.cc
++        omniIOR.cc
++        omniObjRef.cc
++        omniORB.cc
++        omniServant.cc
++        orbOptions.cc
++        orbOptionsFile.cc
++        poa.cc
++        poamanager.cc
++        policy.cc
++        portableserver.cc
++        proxyFactory.cc
++        remoteIdentity.cc
++        inProcessIdentity.cc
++        shutdownIdentity.cc
++        callHandle.cc
++        tracedthread.cc
++        transportRules.cc
++        rmutex.cc
++        uri.cc
++        omniPolicy.cc
++        ${GIOP_SRCS}
++        ${CODESET_SRCS}
++        ${BUILTIN_STUB_SRCS}
++        ${TRANSPORT_SRCS}
++        )
++
++if (UNIX)
++    set(ORB_SRCS ${ORB_SRCS} ${UNIXSOCK_SRCS})
++endif ()
++
++
++set(OMNICORE_STATIC_DEFINITIONS)
++set(OMNICORE_DEFINITIONS
++        USE_omniORB_logStream
++        _OMNIORB_LIBRARY
++        OMNIORB_VERSION_STRING="${OMNIORB_VERSION}"
++        "OMNIORB_VERSION_HEX=${OMNIORB_VERSION_HEX}")
++
++if (OMNIORB_CONFIG_DEFAULT_LOCATION)
++    set(CONFIG_DEFAULT_LOCATION ${OMNIORB_CONFIG_DEFAULT_LOCATION})
++else ()
++    if (UNIX)
++        set(CONFIG_DEFAULT_LOCATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/omniORB.cfg)
++    endif ()
++    if (WIN32)
++        set(CONFIG_DEFAULT_LOCATION C:\\\\OMNIORB.CFG)
++    endif ()
++    if (vxWorksPlatform) # No vxWorks support in cmake
++        set(CONFIG_DEFAULT_LOCATION /a2/tmp/omniORB.cfg)
++    endif ()
++endif ()
++if(UNIX)
++    file(COPY ${CMAKE_SOURCE_DIR}/sample.cfg DESTINATION ${CMAKE_BINARY_DIR})
++    file(RENAME ${CMAKE_BINARY_DIR}/sample.cfg ${CMAKE_BINARY_DIR}/omniORB.cfg)
++    install(FILES ${CMAKE_BINARY_DIR}/omniORB.cfg DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
++endif()
++
++set(OMNICORE_DEFINITIONS
++        ${OMNICORE_DEFINITIONS}
++        CONFIG_DEFAULT_LOCATION="${CONFIG_DEFAULT_LOCATION}"
++        )
++
++##########################################################################
++if (OMNIORB_CONFIG_ENV)
++    set(CONFIG_ENV ${CONFIG_ENV} ${OMNIORB_CONFIG_ENV)
++else ()
++    set(CONFIG_ENV ${CONFIG_ENV} "OMNIORB_CONFIG")
++endif ()
++
++set(OMNICORE_DEFINITIONS
++        ${OMNICORE_DEFINITIONS}
++        CONFIG_ENV="${CONFIG_ENV}")
++
++##########################################################################
++
++set(PLATFORM_LIBS)
++if (WIN32)
++    set(PLATFORM_LIBS ws2_32 advapi32)
++    set(OMNICORE_STATIC_DEFINITIONS ${OMNICORE_STATIC_DEFINITIONS} _WINSTATIC)
++    set(ORB_SRCS ${ORB_SRCS} orbOptionsReg.cc)
++    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
++        set(ORB_SRCS ${ORB_SRCS} msvcdllstub.cc)
++    endif ()
++endif ()
++
++
++add_library(omniORB4_static STATIC ${ORB_SRCS})
++target_link_libraries(omniORB4_static PUBLIC omnithread_static Threads::Threads ${PLATFORM_LIBS})
++target_compile_definitions(omniORB4_static PRIVATE ${OMNICORE_DEFINITIONS} ${OMNICORE_STATIC_DEFINITIONS})
++target_compile_definitions(omniORB4_static PUBLIC ${TARGET_DEFINITIONS})
++target_include_directories(omniORB4_static
++        PRIVATE
++        ${CMAKE_CURRENT_SOURCE_DIR}
++        PUBLIC
++        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/omniORB4/internal>
++        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/generated/lib/omniORB>
++        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
++        $<INSTALL_INTERFACE:include>)
++target_compile_options(omniORB4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} ${COMPILE_FLAG_FPERMISSIVE} ${COMPILE_FLAG_WNO_WRITE_STRINGS})
++add_dependencies(omniORB4_static RunGenerator)
++if (WIN32)
++    set_target_properties(omniORB4_static PROPERTIES OUTPUT_NAME "omniORB4")
++endif()
++
++
++add_library(omniORB4 SHARED ${ORB_SRCS})
++target_link_libraries(omniORB4 PUBLIC omnithread Threads::Threads ${PLATFORM_LIBS})
++target_compile_definitions(omniORB4 PRIVATE ${OMNICORE_DEFINITIONS})
++target_compile_definitions(omniORB4 PUBLIC ${TARGET_DEFINITIONS})
++target_include_directories(omniORB4
++        PRIVATE
++        ${CMAKE_CURRENT_SOURCE_DIR}
++        PUBLIC
++        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/omniORB4/internal>
++        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/generated/lib/omniORB>
++        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
++        $<INSTALL_INTERFACE:include>)
++target_compile_options(omniORB4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} ${COMPILE_FLAG_FPERMISSIVE} ${COMPILE_FLAG_WNO_WRITE_STRINGS})
++add_dependencies(omniORB4 RunGenerator)
++if (WIN32)
++    set_target_properties(omniORB4 PROPERTIES OUTPUT_NAME "omniORB4_rt")
++endif()
++
++
++install(TARGETS omniORB4_static omniORB4
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++
++add_subdirectory(ssl)
+diff --git a/src/lib/omniORB/orbcore/ssl/CMakeLists.txt b/src/lib/omniORB/orbcore/ssl/CMakeLists.txt
+new file mode 100644
+index 0000000..341a6b1
+--- /dev/null
++++ b/src/lib/omniORB/orbcore/ssl/CMakeLists.txt
+@@ -0,0 +1,56 @@
++find_package(OpenSSL)
++
++if (OPENSSL_FOUND)
++    set(SSL_SRCS
++            sslActive.cc
++            sslAddress.cc
++            sslAddress.h
++            sslConnection.cc
++            sslConnection.h
++            sslContext.cc
++            sslEndpoint.cc
++            sslEndpoint.h
++            sslTransportImpl.cc
++            sslTransportImpl.h)
++
++
++    if (WIN32)
++        set(OMNISSL_STATIC_DEFINITIONS ${OMNISSL_STATIC_DEFINITIONS} _WINSTATIC)
++        #endif
++        if (CMAKE_CXX_COMPILER_ID MATCHES "clang")
++            # using Clang
++        elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
++            # using GCC
++
++        elseif (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
++            # using Intel C++
++        elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
++            # using Visual Studio C++
++            set(SSL_SRCS ${SSL_SRCS} msvcdllstub.cc)
++        endif ()
++
++    endif ()
++
++    add_library(omnisslTP4_static STATIC ${SSL_SRCS})
++    target_link_libraries(omnisslTP4_static PUBLIC omniORB4_static Threads::Threads ${OPENSSL_LIBRARIES} ${PLATFORM_LIBS})
++    target_compile_definitions(omnisslTP4_static PRIVATE _OMNIORB_SSL_LIBRARY ${OMNISSL_STATIC_DEFINITIONS})
++    target_include_directories(omnisslTP4_static PRIVATE ${OPENSSL_INCLUDE_DIR} ..)
++    target_compile_options(omnisslTP4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} ${COMPILE_FLAG_FPERMISSIVE} ${COMPILE_FLAG_WNO_WRITE_STRINGS})
++
++
++    add_library(omnisslTP4 SHARED ${SSL_SRCS})
++    target_link_libraries(omnisslTP4 PUBLIC omniORB4 Threads::Threads ${OPENSSL_LIBRARIES} ${PLATFORM_LIBS})
++    target_compile_definitions(omnisslTP4 PRIVATE _OMNIORB_SSL_LIBRARY)
++    target_include_directories(omnisslTP4 PRIVATE ${OPENSSL_INCLUDE_DIR} ..)
++
++    target_compile_options(omnisslTP4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS} ${COMPILE_FLAG_FPERMISSIVE} ${COMPILE_FLAG_WNO_WRITE_STRINGS})
++
++
++    install(TARGETS omnisslTP4_static omnisslTP4
++            EXPORT ${PROJECT_NAME}Targets
++            RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++            ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++else ()
++    message(WARNING "OpenSSL not found, disable omnisslTP")
++endif ()
+\ No newline at end of file
+diff --git a/src/lib/omniORB/ziop/CMakeLists.txt b/src/lib/omniORB/ziop/CMakeLists.txt
+new file mode 100644
+index 0000000..bc16a3b
+--- /dev/null
++++ b/src/lib/omniORB/ziop/CMakeLists.txt
+@@ -0,0 +1,41 @@
++find_package(ZLIB)
++
++if (ZLIB_FOUND)
++
++    set(OMNIZIOP4_SRC
++            messagingStubs.cc
++            omniZIOP.cc
++            omniZIOPImpl.h
++            ziopStubs.cc
++            zlibCompressor.cc
++            zlibCompressor.h
++            )
++
++    add_library(omniZIOP4_static STATIC ${OMNIZIOP4_SRC})
++    target_link_libraries(omniZIOP4_static PUBLIC omniORB4_static omnithread_static Threads::Threads ZLIB::ZLIB)
++    target_include_directories(omniZIOP4_static PRIVATE ${ZLIB_INCLUDE_DIR}  .)
++    target_compile_definitions(omniZIOP4_static PRIVATE _OMNIORB_ZIOP_LIBRARY)
++    target_compile_options(omniZIOP4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    if (WIN32)
++        set_target_properties(omniZIOP4_static PROPERTIES OUTPUT_NAME "omniZIOP4")
++    endif()
++
++    add_library(omniZIOP4 SHARED ${OMNIZIOP4_SRC})
++    target_link_libraries(omniZIOP4 PUBLIC omniORB4 omnithread Threads::Threads ZLIB::ZLIB)
++    target_include_directories(omniZIOP4 PRIVATE ${ZLIB_INCLUDE_DIR}  .)
++    target_compile_definitions(omniZIOP4 PRIVATE _OMNIORB_ZIOP_LIBRARY)
++    target_compile_options(omniZIOP4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    if (WIN32)
++        set_target_properties(omniZIOP4 PROPERTIES OUTPUT_NAME "omniZIOP4_rt")
++    endif()
++
++
++    install(TARGETS omniZIOP4_static omniZIOP4
++            EXPORT ${PROJECT_NAME}Targets
++            RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++            ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++
++else()
++    message(WARNING "Zlib not found, disable omniZIOP")
++endif ()
+\ No newline at end of file
+diff --git a/src/lib/omniORB/ziopdynamic/CMakeLists.txt b/src/lib/omniORB/ziopdynamic/CMakeLists.txt
+new file mode 100644
+index 0000000..29a800b
+--- /dev/null
++++ b/src/lib/omniORB/ziopdynamic/CMakeLists.txt
+@@ -0,0 +1,37 @@
++set(OMNIZIOPDYNAMIC4_SRC
++        ../ziop/ziopStubs.cc
++        omniZIOPDynamic.cc
++        compressionDynStubs.cc
++        ziopDynStubs.cc)
++
++
++find_package(ZLIB)
++
++if (ZLIB_FOUND)
++
++
++    add_library(omniZIOPDynamic4_static STATIC ${OMNIZIOPDYNAMIC4_SRC})
++    target_link_libraries(omniZIOPDynamic4_static PUBLIC omniORB4_static omniZIOP4_static omniDynamic4_static omnithread Threads::Threads ZLIB::ZLIB)
++    target_compile_definitions(omniZIOPDynamic4_static PRIVATE _OMNIORB_ZIOP_LIBRARY)
++    target_include_directories(omniZIOPDynamic4_static PRIVATE ${ZLIB_INCLUDE_DIR}  .)
++    target_compile_options(omniZIOPDynamic4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    if (WIN32)
++        set_target_properties(omniZIOPDynamic4_static PROPERTIES OUTPUT_NAME "omniZIOPDynamic4")
++    endif()
++
++    add_library(omniZIOPDynamic4 SHARED ${OMNIZIOPDYNAMIC4_SRC})
++    target_link_libraries(omniZIOPDynamic4 PUBLIC omniORB4 omniZIOP4 omniDynamic4 omnithread Threads::Threads ZLIB::ZLIB)
++    target_compile_definitions(omniZIOPDynamic4 PRIVATE _OMNIORB_ZIOP_LIBRARY)
++    target_include_directories(omniZIOPDynamic4 PRIVATE ${ZLIB_INCLUDE_DIR} .)
++    target_compile_options(omniZIOPDynamic4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    if (WIN32)
++        set_target_properties(omniZIOPDynamic4 PROPERTIES OUTPUT_NAME "omniZIOPDynamic4_rt")
++    endif()
++
++    install(TARGETS omniZIOPDynamic4_static omniZIOPDynamic4
++            EXPORT ${PROJECT_NAME}Targets
++            RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++            ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++
++endif ()
+\ No newline at end of file
+diff --git a/src/lib/omnithread/CMakeLists.txt b/src/lib/omnithread/CMakeLists.txt
+new file mode 100644
+index 0000000..9327cc5
+--- /dev/null
++++ b/src/lib/omnithread/CMakeLists.txt
+@@ -0,0 +1,39 @@
++
++set(OMNITHREAD_SRC threaddata.cc
++        ${PROJECT_SOURCE_DIR}/include/omnithread.h)
++if (UNIX)
++    set(OMNITHREAD_SRC ${OMNITHREAD_SRC} posix.cc)
++    set(OMNITHREAT_DEFS NoNanoSleep PthreadDraftVersion=10)
++else ()
++    set(OMNITHREAD_SRC ${OMNITHREAD_SRC} nt.cc)
++    set(OMNITHREAT_DEFS_STATIC "_WINSTATIC")
++    set(OMNITHREAT_DEFS_SHARED "_OMNITHREAD_DLL")
++endif ()
++
++add_library(omnithread_static STATIC ${OMNITHREAD_SRC})
++target_compile_definitions(omnithread_static PUBLIC ${TARGET_DEFINITIONS})
++target_compile_definitions(omnithread_static PRIVATE ${OMNITHREAT_DEFS} ${OMNITHREAT_DEFS_STATIC})
++target_include_directories(omnithread_static PRIVATE . ${PROJECT_SOURCE_DIR}/include)
++target_link_libraries(omnithread_static PUBLIC Threads::Threads)
++target_compile_options(omnithread_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(omnithread_static PROPERTIES OUTPUT_NAME "omnithread")
++endif()
++
++
++add_library(omnithread SHARED ${OMNITHREAD_SRC})
++target_compile_definitions(omnithread PUBLIC ${TARGET_DEFINITIONS})
++target_link_libraries(omnithread PRIVATE Threads::Threads)
++target_compile_definitions(omnithread PRIVATE ${OMNITHREAT_DEFS} ${OMNITHREAT_DEFS_SHARED})
++target_include_directories(omnithread PRIVATE . ${PROJECT_SOURCE_DIR}/include)
++target_link_libraries(omnithread PUBLIC Threads::Threads)
++target_compile_options(omnithread PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(omnithread PROPERTIES OUTPUT_NAME "omnithread_rt")
++endif()
++
++install(TARGETS omnithread_static omnithread
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/services/CMakeLists.txt b/src/services/CMakeLists.txt
+new file mode 100755
+index 0000000..f23c2d3
+--- /dev/null
++++ b/src/services/CMakeLists.txt
+@@ -0,0 +1 @@
++add_subdirectory(mklib)
+diff --git a/src/services/mklib/CMakeLists.txt b/src/services/mklib/CMakeLists.txt
+new file mode 100755
+index 0000000..9e2be38
+--- /dev/null
++++ b/src/services/mklib/CMakeLists.txt
+@@ -0,0 +1,107 @@
++set(GEN_DIR ${PROJECT_BINARY_DIR}/generated/services/mklib/)
++set(IDL_DIR ${PROJECT_SOURCE_DIR}/idl/COS/)
++file(MAKE_DIRECTORY ${GEN_DIR})
++
++RUN_OMNIIDL(${IDL_DIR}/CosNotifyChannelAdmin.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosNotifyChannelAdmin.hh;CosNotifyChannelAdminSK.cc;CosNotifyChannelAdminDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosNotifyFilter.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosNotifyFilter.hh;CosNotifyFilterSK.cc;CosNotifyFilterDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosNotifyComm.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosNotifyComm.hh;CosNotifyCommSK.cc;CosNotifyCommDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosNotification.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosNotification.hh;CosNotificationSK.cc;CosNotificationDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosEventChannelAdmin.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosEventChannelAdmin.hh;CosEventChannelAdminSK.cc;CosEventChannelAdminDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosEventComm.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosEventComm.hh;CosEventCommSK.cc;CosEventCommDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosTime.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosTime.hh;CosTimeSK.cc;CosTimeDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/TimeBase.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "TimeBase.hh;TimeBaseSK.cc;TimeBaseDynSK.cc")
++RUN_OMNIIDL(${IDL_DIR}/CosLifeCycle.idl ${GEN_DIR} ${PROJECT_SOURCE_DIR}/idl/COS "-Wba;-Wbdebug;-Wbuse_quotes" "CosLifeCycle.hh;CosLifeCycleSK.cc;CosLifeCycleDynSK.cc")
++
++
++set(COSDYNAMIC4_SRC
++        ${GEN_DIR}/TimeBaseDynSK.cc
++        ${GEN_DIR}/CosTimeDynSK.cc
++        ${GEN_DIR}/CosEventCommDynSK.cc
++        ${GEN_DIR}/CosEventChannelAdminDynSK.cc
++        ${GEN_DIR}/CosNotificationDynSK.cc
++        ${GEN_DIR}/CosNotifyCommDynSK.cc
++        ${GEN_DIR}/CosNotifyFilterDynSK.cc
++        ${GEN_DIR}/CosNotifyChannelAdminDynSK.cc
++        ${GEN_DIR}/CosLifeCycleDynSK.cc)
++
++set(COS4_SRC
++        ${GEN_DIR}/TimeBase.hh
++        ${GEN_DIR}/TimeBaseSK.cc
++        ${GEN_DIR}/CosTime.hh
++        ${GEN_DIR}/CosTimeSK.cc
++        ${GEN_DIR}/CosEventComm.hh
++        ${GEN_DIR}/CosEventCommSK.cc
++        ${GEN_DIR}/CosEventChannelAdmin.hh
++        ${GEN_DIR}/CosEventChannelAdminSK.cc
++        ${GEN_DIR}/CosNotification.hh
++        ${GEN_DIR}/CosNotificationSK.cc
++        ${GEN_DIR}/CosNotifyComm.hh
++        ${GEN_DIR}/CosNotifyCommSK.cc
++        ${GEN_DIR}/CosNotifyFilter.hh
++        ${GEN_DIR}/CosNotifyFilterSK.cc
++        ${GEN_DIR}/CosNotifyChannelAdmin.hh
++        ${GEN_DIR}/CosNotifyChannelAdminSK.cc
++        ${GEN_DIR}/CosLifeCycle.hh
++        ${GEN_DIR}/CosLifeCycleSK.cc)
++
++
++ADD_CUSTOM_TARGET(CosRunGenerator DEPENDS
++        omniidl
++        omnicpp
++        ${COSDYNAMIC4_SRC}
++        ${COS4_SRC}
++        COMMENT "Checking if re-generation is required for target COS4")
++
++add_library(COS4_static STATIC ${COS4_SRC})
++target_link_libraries(COS4_static PRIVATE omniORB4_static omniDynamic4 omnithread Threads::Threads)
++target_compile_definitions(COS4_static PRIVATE  _COS_LIBRARY ENABLE_CLIENT_IR_SUPPORT)
++target_include_directories(COS4_static PRIVATE ${GEN_DIR}/ ${PROJECT_SOURCE_DIR}/include .)
++target_compile_options(COS4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++add_dependencies(COS4_static CosRunGenerator)
++if (WIN32)
++    set_target_properties(COS4_static PROPERTIES OUTPUT_NAME "COS4")
++endif()
++
++
++add_library(COS4 SHARED ${COS4_SRC})
++target_link_libraries(COS4 PRIVATE omniORB4 omniDynamic4 omnithread Threads::Threads)
++target_compile_definitions(COS4 PRIVATE  _COS_LIBRARY ENABLE_CLIENT_IR_SUPPORT)
++target_include_directories(COS4 PRIVATE ${GEN_DIR}/ ${PROJECT_SOURCE_DIR}/include .)
++target_compile_options(COS4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++add_dependencies(COS4 CosRunGenerator)
++if (WIN32)
++    set_target_properties(COS4 PROPERTIES OUTPUT_NAME "COS4_rt")
++endif()
++
++
++add_library(COSDynamic4_static STATIC ${COSDYNAMIC4_SRC})
++target_link_libraries(COSDynamic4_static PUBLIC COS4 omniORB4_static omniDynamic4_static omnithread_static Threads::Threads)
++target_compile_definitions(COSDynamic4_static PRIVATE _COS_LIBRARY ENABLE_CLIENT_IR_SUPPORT)
++target_include_directories(COSDynamic4_static PRIVATE ${GEN_DIR}/ .)
++target_compile_options(COSDynamic4_static PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(COSDynamic4_static PROPERTIES OUTPUT_NAME "COSDynamic4")
++endif()
++
++
++add_library(COSDynamic4 SHARED ${COSDYNAMIC4_SRC})
++target_link_libraries(COSDynamic4 PUBLIC COS4 omniORB4 omniDynamic4 omnithread Threads::Threads)
++target_compile_definitions(COSDynamic4 PRIVATE  _COS_LIBRARY ENABLE_CLIENT_IR_SUPPORT USE_core_stub_in_nt_dll)
++target_include_directories(COSDynamic4 PRIVATE ${GEN_DIR}/ .)
++target_compile_options(COSDynamic4 PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++if (WIN32)
++    set_target_properties(COSDynamic4 PROPERTIES OUTPUT_NAME "COSDynamic4_rt")
++endif()
++
++
++INSTALL(DIRECTORY ${GEN_DIR}
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/COS
++        FILES_MATCHING PATTERN "*.h*")
++INSTALL(FILES COS_sysdep.h
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/COS)
++
++install(TARGETS COS4_static COS4 COSDynamic4_static COSDynamic4
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+\ No newline at end of file
+diff --git a/src/tool/CMakeLists.txt b/src/tool/CMakeLists.txt
+new file mode 100755
+index 0000000..31d6da1
+--- /dev/null
++++ b/src/tool/CMakeLists.txt
+@@ -0,0 +1,2 @@
++#add_subdirectory(omkdepend)
++add_subdirectory(omniidl)
+diff --git a/src/tool/omkdepend/CMakeLists.txt b/src/tool/omkdepend/CMakeLists.txt
+new file mode 100644
+index 0000000..2291f13
+--- /dev/null
++++ b/src/tool/omkdepend/CMakeLists.txt
+@@ -0,0 +1,17 @@
++set(OMKDEPEND_EXE_SRC
++    include.c
++    main.c
++    parse.c
++    pr.c
++    cppsetup.c
++    ifparser.c)
++add_executable(omkdepend ${OMKDEPEND_EXE_SRC})
++target_compile_definitions(omkdepend PRIVATE DEBUG)
++target_include_directories(omkdepend PRIVATE . ${PROJECT_SOURCE_DIR}/include)
++target_compile_options(omkdepend PRIVATE -O )
++
++
++install(TARGETS omkdepend
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/tool/omniidl/CMakeLists.txt b/src/tool/omniidl/CMakeLists.txt
+new file mode 100755
+index 0000000..8e0b930
+--- /dev/null
++++ b/src/tool/omniidl/CMakeLists.txt
+@@ -0,0 +1 @@
++add_subdirectory(cxx)
+diff --git a/src/tool/omniidl/cxx/CMakeLists.txt b/src/tool/omniidl/cxx/CMakeLists.txt
+new file mode 100644
+index 0000000..943334a
+--- /dev/null
++++ b/src/tool/omniidl/cxx/CMakeLists.txt
+@@ -0,0 +1,104 @@
++add_subdirectory(cccp)
++
++set(_OMNIIDLMODULE_SRC
++        y.tab.cc
++        lex.yy.cc
++        idlerr.cc
++        idlutil.cc
++        idltype.cc
++        ${PROJECT_SOURCE_DIR}/include/omniORB4/acconfig.h
++        ${PROJECT_SOURCE_DIR}/include/omniORB4/CORBA_sysdep_auto.h
++        ${PROJECT_SOURCE_DIR}/include/omniORB4/CORBA_sysdep.h
++        ${PROJECT_SOURCE_DIR}/include/omniconfig.h
++        ${PROJECT_SOURCE_DIR}/include/omniORB4/internal/tcpSocket.h
++        idlrepoId.cc
++        idlscope.cc
++        idlexpr.cc
++        idlast.cc
++        idlvalidate.cc
++        idldump.cc
++        idlconfig.cc
++        idlfixed.cc
++        idlpython.cc)
++
++
++
++if (WIN32)
++    add_executable(omniidl ${_OMNIIDLMODULE_SRC})
++    target_compile_definitions(omniidl PRIVATE PYTHON_INCLUDE=<Python.h> PYTHON_THREAD_INC=<pythread.h> MSDOS OMNIIDL_EXECUTABLE IDLMODULE_VERSION="0x2630")
++    target_include_directories(omniidl PRIVATE ${PYTHON_INCLUDE_DIR} . ${PROJECT_SOURCE_DIR}/include)
++    target_compile_options(omniidl PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    target_compile_definitions(omniidl PUBLIC ${TARGET_DEFINITIONS})
++    target_link_libraries(omniidl PRIVATE Python::Python)
++    if (${Python_VERSION_MAJOR} EQUAL 3)
++        if (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
++            set_property(TARGET omniidl APPEND_STRING PROPERTY LINK_FLAGS "-municode ")
++        endif ()
++    endif ()
++
++    install(TARGETS omniidl
++            EXPORT ${PROJECT_NAME}Targets
++            RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++            ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
++    if (MSVC)
++        add_definitions(-D_CRT_SECURE_NO_WARNINGS
++                        -DDONT_DECLARE_STRERROR)
++    endif(MSVC)
++
++else ()
++
++    add_library(omniidl SHARED ${_OMNIIDLMODULE_SRC})
++    target_compile_definitions(omniidl PRIVATE PYTHON_INCLUDE=<Python.h> PYTHON_THREAD_INC=<pythread.h> IDLMODULE_VERSION="0x2630")
++    target_include_directories(omniidl PRIVATE ${PYTHON_INCLUDE_DIR} . ${PROJECT_SOURCE_DIR}/include)
++    target_compile_options(omniidl PRIVATE ${COMPILE_FLAG_WNO_UNUSED} ${COMPILE_FLAG_FEXCEPTIONS})
++    target_compile_definitions(omniidl PUBLIC ${TARGET_DEFINITIONS})
++    target_link_libraries(omniidl PRIVATE Python::Python)
++    set_target_properties(omniidl PROPERTIES PREFIX "")
++    set_target_properties(omniidl PROPERTIES OUTPUT_NAME "_omniidl")
++
++
++    install(TARGETS omniidl EXPORT ${PROJECT_NAME}Targets LIBRARY DESTINATION ${PYTHON_SITE})
++
++    set(prefix ${CMAKE_INSTALL_PREFIX})
++    set(exec_prefix ${CMAKE_INSTALL_PREFIX})
++    set(pythondir ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITE})
++    set(pyexecdir ${CMAKE_INSTALL_PREFIX}/${PYTHON_SITE})
++    set(PYTHON ${Python_EXECUTABLE})
++
++    if (${Python_VERSION_MAJOR} EQUAL 2)
++        configure_file(${PROJECT_SOURCE_DIR}/src/tool/omniidl/python/scripts/omniidl.in ${PROJECT_BINARY_DIR}/bin/omniidl @ONLY)
++    else ()
++        configure_file(${PROJECT_SOURCE_DIR}/src/tool/omniidl/python3/scripts/omniidl.in ${PROJECT_BINARY_DIR}/bin/omniidl @ONLY)
++    endif ()
++
++    install(FILES ${PROJECT_BINARY_DIR}/bin/omniidl DESTINATION bin
++            PERMISSIONS WORLD_EXECUTE WORLD_READ OWNER_WRITE)
++
++endif ()
++
++INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/generated/lib/omniORB/
++        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++        FILES_MATCHING PATTERN "*.h*")
++
++if (${Python_VERSION_MAJOR} EQUAL 2)
++    install(DIRECTORY
++            ${PROJECT_SOURCE_DIR}/src/tool/omniidl/python/omniidl
++            ${PROJECT_SOURCE_DIR}/src/tool/omniidl/python/omniidl_be
++            DESTINATION ${PYTHON_SITE}
++            FILES_MATCHING PATTERN "*.py")
++else ()
++    install(DIRECTORY
++            ${PROJECT_SOURCE_DIR}/src/tool/omniidl/python3/omniidl
++            ${PROJECT_SOURCE_DIR}/src/tool/omniidl/python3/omniidl_be
++            DESTINATION ${PYTHON_SITE}
++            FILES_MATCHING PATTERN "*.py")
++endif ()
++
++add_dependencies(omniidl omnicpp)
++
++
++
++
++
++
+diff --git a/src/tool/omniidl/cxx/cccp/CMakeLists.txt b/src/tool/omniidl/cxx/cccp/CMakeLists.txt
+new file mode 100644
+index 0000000..672eeab
+--- /dev/null
++++ b/src/tool/omniidl/cxx/cccp/CMakeLists.txt
+@@ -0,0 +1,24 @@
++set(OMNICPP_EXE_SRC
++        cexp.c
++        cccp.c
++        config.c
++        alloca.c)
++
++if (WIN32)
++    set(OMNICPP_EXE_SRC ${OMNICPP_EXE_SRC} index.c)
++    if (MSVC)
++        add_definitions(-D_CRT_SECURE_NO_WARNINGS
++                        -DDONT_DECLARE_STRERROR
++                        -D_CRT_NONSTDC_NO_WARNINGS)
++    endif(MSVC)
++endif ()
++
++add_executable(omnicpp ${OMNICPP_EXE_SRC})
++target_include_directories(omnicpp PRIVATE ${PROJECT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
++target_compile_definitions(omnicpp PRIVATE HAVE_CONFIG_H)
++
++install(TARGETS omnicpp
++        EXPORT ${PROJECT_NAME}Targets
++        RUNTIME DESTINATION ${OMNI_RUNTIME_DESTINATION}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${OMNI_ARCHIVE_DESTINATION})
+diff --git a/src/tool/omniidl/cxx/cccp/cccp.c b/src/tool/omniidl/cxx/cccp/cccp.c
+index 6ecd071..58f8a32 100644
+--- a/src/tool/omniidl/cxx/cccp/cccp.c
++++ b/src/tool/omniidl/cxx/cccp/cccp.c
+@@ -44,6 +44,13 @@ typedef unsigned char U_CHAR;
+ 
+ #include "pcp.h"
+ 
++
++#if defined(_MSC_VER) && defined(_WIN32)
++# include <io.h>
++# define PATH_SEPARATOR ';'
++# define alloca _alloca
++#endif
++
+ /* By default, colon separates directories in a path.  */
+ #ifndef PATH_SEPARATOR
+ #define PATH_SEPARATOR ':'
+@@ -53,6 +60,7 @@ typedef unsigned char U_CHAR;
+ #include <sys/stat.h>
+ #include <ctype.h>
+ #include <stdio.h>
++#include <stdint.h>
+ #include <signal.h>
+ 
+ /* The following symbols should be autoconfigured:
+@@ -1975,7 +1983,7 @@ main (argc, argv)
+     int default_len = 0;
+     /* Remove the `include' from /usr/local/lib/gcc.../include.  */
+     if (!strcmp (default_prefix + strlen (default_prefix) - 8, "/include")) {
+-      default_len = strlen (default_prefix) - 7;
++      default_len = (int)strlen (default_prefix) - 7;
+       default_prefix[default_len] = 0;
+     }
+     /* Search "translated" versions of GNU directories.
+@@ -2106,7 +2114,7 @@ main (argc, argv)
+       strcpy (p, q);
+ 
+       /* Output P, but remove known suffixes.  */
+-      len = strlen (p);
++      len = (int)strlen (p);
+       q = p + len;
+       if (len >= 2
+ 	  && p[len - 2] == '.'
+@@ -2413,7 +2421,7 @@ trigraph_pcp (buf)
+     default:
+       continue;
+     }
+-    len = sptr - fptr - 2;
++    len = (int)(sptr - fptr - 2);
+ 
+     /* BSD doc says bcopy () works right for overlapping strings.  In ANSI
+        C, this will be memmove ().  */
+@@ -2424,10 +2432,10 @@ trigraph_pcp (buf)
+     *bptr++ = c;
+     fptr = ++sptr;
+   }
+-  len = buf->length - (fptr - buf->buf);
++  len = buf->length - (int)(fptr - buf->buf);
+   if (bptr != fptr && len > 0)
+     bcopy ((char *) fptr, (char *) bptr, len);
+-  buf->length -= fptr - bptr;
++  buf->length -= (int)(fptr - bptr);
+   buf->buf[buf->length] = '\0';
+   if (warn_trigraphs && fptr != bptr)
+     warning_with_line (0, "%lu trigraph(s) encountered",
+@@ -2529,7 +2537,7 @@ get_lintcmd (ibp, limit, argstart, arglen, cmdlen)
+ 
+   if (ibp >= limit) return NULL;
+ 
+-  linsize = limit - ibp;
++  linsize = (int)(limit - ibp);
+   
+   /* Oh, I wish C had lexical functions... hell, I'll just open-code the set */
+   if ((linsize >= 10) && !bcmp (ibp, "NOTREACHED", 10)) {
+@@ -2552,7 +2560,7 @@ get_lintcmd (ibp, limit, argstart, arglen, cmdlen)
+     /* OK, read a number */
+     for (numptr = *argstart = ibp; (numptr < limit) && isdigit (*numptr);
+ 	 numptr++);
+-    *arglen = numptr - *argstart;
++    *arglen = (int)(numptr - *argstart);
+     return "VARARGS";
+   }
+   return NULL;
+@@ -2799,7 +2807,7 @@ do { ip = &instack[indepth];		\
+       op->bufp = obp;
+       if (! handle_directive (ip, op)) {
+ #ifdef USE_C_ALLOCA
+-	alloca (0);
++    alloca (0);
+ #endif
+ 	/* Not a known directive: treat it as ordinary text.
+ 	   IP, OP, IBP, etc. have not been changed.  */
+@@ -3303,7 +3311,7 @@ randomchar:
+ 	      /* Save this as a displacement from the beginning of the output
+ 		 buffer.  We can not save this as a position in the output
+ 		 buffer, because it may get realloc'ed by RECACHE.  */
+-	      obufp_before_macroname = (obp - op->buf) - ident_length;
++          obufp_before_macroname = (int)(obp - op->buf) - ident_length;
+ 	      op_lineno_before_macroname = op->lineno;
+ 	      
+ 	      if (hp->type == T_PCSTRING) {
+@@ -3532,7 +3540,7 @@ expand_to_temp_buffer (buf, limit, output_marks, assertions)
+ {
+   register FILE_BUF *ip;
+   FILE_BUF obuf;
+-  int length = limit - buf;
++  int length = (int)(limit - buf);
+   U_CHAR *buf1;
+   int odepth = indepth;
+   int save_assertions_flag = assertions_flag;
+@@ -3595,7 +3603,7 @@ expand_to_temp_buffer (buf, limit, output_marks, assertions)
+     abort ();
+ 
+   /* Record the output.  */
+-  obuf.length = obuf.bufp - obuf.buf;
++  obuf.length = (int)(obuf.bufp - obuf.buf);
+ 
+   assertions_flag = save_assertions_flag;
+   return obuf;
+@@ -3667,7 +3675,7 @@ handle_directive (ip, op)
+       else break;
+     }
+   }
+-  ident_length = cp - bp;
++  ident_length = (int)(cp - bp);
+   ident = bp;
+   after_ident = cp;
+ 
+@@ -3856,7 +3864,7 @@ handle_directive (ip, op)
+         op->bufp += kt->length;
+ 
+ 	/* Output arguments.  */
+-	len = (bp - buf);
++    len = (int)(bp - buf);
+ 	check_expand (op, len);
+ 	bcopy (buf, (char *) op->bufp, len);
+ 	op->bufp += len;
+@@ -3872,7 +3880,7 @@ handle_directive (ip, op)
+ 	register U_CHAR *xp = buf;
+ 	/* Need to copy entire directive into temp buffer before dispatching */
+ 
+-	cp = (U_CHAR *) alloca (bp - buf + 5); /* room for directive plus
++    cp = (U_CHAR *) alloca (bp - buf + 5); /* room for directive plus
+ 						  some slop */
+ 	buf = cp;
+ 
+@@ -3979,7 +3987,7 @@ handle_directive (ip, op)
+ 
+ 	if ((dump_macros != dump_definitions) < kt->pass_thru) {
+ 	  /* Output arguments.  */
+-	  len = (cp - buf);
++      len = (int)(cp - buf);
+ 	  check_expand (op, len);
+ 	  bcopy (buf, (char *) op->bufp, len);
+ 	  op->bufp += len;
+@@ -3989,7 +3997,7 @@ handle_directive (ip, op)
+ 	  SKIP_WHITE_SPACE (xp);
+ 	  yp = xp;
+ 	  while (is_idchar[*xp]) xp++;
+-	  len = (xp - yp);
++      len = (int)(xp - yp);
+ 	  check_expand (op, len + 1);
+ 	  *op->bufp++ = ' ';
+ 	  bcopy (yp, op->bufp, len);
+@@ -4074,7 +4082,7 @@ special_symbol (hp, op)
+ 
+       if (string)
+ 	{
+-	  buf = (char *) alloca (3 + 4 * strlen (string));
++      buf = (char *) alloca (3 + 4 * strlen (string));
+ 	  quote_string (buf, string);
+ 	}
+       else
+@@ -4200,7 +4208,7 @@ oops:
+     error ("cccp error: invalid special hash type"); /* time for gdb */
+     abort ();
+   }
+-  len = strlen (buf);
++  len = (int)strlen (buf);
+   check_expand (op, len);
+   bcopy (buf, (char *) op->bufp, len);
+   op->bufp += len;
+@@ -4318,7 +4326,7 @@ get_filename:
+ 	    /* Found a named file.  Figure out dir of the file,
+ 	       and put it in front of the search list.  */
+ 	    dsp = ((struct file_name_list *)
+-		   alloca (sizeof (struct file_name_list) + strlen (nam)));
++           alloca (sizeof (struct file_name_list) + strlen (nam)));
+ 	    strcpy (dsp->fname, nam);
+ 	    simplify_filename (dsp->fname);
+ 	    nam = base_name (dsp->fname);
+@@ -4328,7 +4336,7 @@ get_filename:
+ 	    dsp->next = search_start;
+ 	    if (!search_start || strcmp (dsp->fname, search_start->fname)) {
+ 	      search_start = dsp;
+-	      n = nam - dsp->fname;
++          n = (int)(nam - dsp->fname);
+ 	      if (n + INCLUDE_LEN_FUDGE > max_include_len)
+ 		max_include_len = n + INCLUDE_LEN_FUDGE;
+ 	    }
+@@ -4535,7 +4543,7 @@ get_filename:
+ 	if (angle_brackets)
+ 	  {
+ 	    if (search_start) {
+-	      char *p = (char *) alloca (strlen (search_start->fname)
++          char *p = (char *) alloca (strlen (search_start->fname)
+ 					 + strlen (fbeg) + 1);
+ 	      strcpy (p, search_start->fname);
+ 	      strcat (p, fbeg);
+@@ -4574,7 +4582,7 @@ get_filename:
+ 	do {
+ 	  sprintf (pcftry, "%s%d", fname, pcfnum++);
+ 
+-	  pcf = open (pcftry, O_RDONLY, 0666);
++      pcf = open (pcftry, O_RDONLY, 0666);
+ 	  if (pcf != -1)
+ 	    {
+ 	      struct stat s;
+@@ -4586,12 +4594,12 @@ get_filename:
+ 		{
+ 		  pcfbuf = check_precompiled (pcf, &s, fname, &pcfbuflimit);
+ 		  /* Don't need it any more.  */
+-		  close (pcf);
++          close (pcf);
+ 		}
+ 	      else
+ 		{
+ 		  /* Don't need it at all.  */
+-		  close (pcf);
++          close (pcf);
+ 		  break;
+ 		}
+ 	    }
+@@ -4951,7 +4959,7 @@ open_include_file (filename, include_filename, searchptr, importing, pinc)
+       if (lookup_ino_include (inc)
+ 	  && inc->control_macro
+ 	  && (!inc->control_macro[0] || lookup (inc->control_macro, -1, -1))) {
+-	close (fd);
++    close (fd);
+ 	fd = -2;
+       }
+     }
+@@ -5124,7 +5132,7 @@ finclude (f, inc, op, system_header_p, dirptr)
+   }
+   fp->buf[fp->length] = '\0';
+ 
+-  /* Close descriptor now, so nesting does not use lots of descriptors.  */
++  /* close descriptor now, so nesting does not use lots of descriptors.  */
+   close (f);
+ 
+   /* Must do this before calling trigraph_pcp, so that the correct file name
+@@ -5278,7 +5286,7 @@ check_preconditions (prec)
+       name = prec;
+       while (is_idchar[(U_CHAR) *prec])
+ 	prec++;
+-      len = prec - name;
++      len = (int)(prec - name);
+       
+       if (lookup ((U_CHAR *) name, len, -1))
+ 	return 0;
+@@ -5329,8 +5337,8 @@ pcfinclude (buf, limit, name, op)
+        is narrower than a pointer.
+        Do not try risky measures here to get another type to use!
+        Do not include stddef.h--it will fail!  */
+-    if ((HOST_WIDE_INT) cp & 3)
+-      cp += 4 - ((HOST_WIDE_INT) cp & 3);
++    if ((intptr_t) cp & 3)
++      cp += 4 - ((intptr_t) cp & 3);
+     
+     /* Now get the string.  */
+     str = (STRINGDEF *) (GENERIC_PTR) cp;
+@@ -5349,7 +5357,7 @@ pcfinclude (buf, limit, name, op)
+     str->len = tmpbuf.length;
+     str->writeflag = 0;
+     str->filename = name;
+-    str->output_mark = outbuf.bufp - outbuf.buf;
++    str->output_mark = (int)(outbuf.bufp - outbuf.buf);
+     
+     str->chain = 0;
+     *stringlist_tailp = str;
+@@ -5447,7 +5455,7 @@ write_output ()
+     if (next_string
+ 	&& cur_buf_loc - outbuf.buf == next_string->output_mark) {
+       if (next_string->writeflag) {
+-	len = 4 * strlen ((char *) next_string->filename) + 32;
++    len = 4 * (int)strlen ((char *) next_string->filename) + 32;
+ 	while (len > line_directive_len)
+ 	  line_directive = xrealloc (line_directive, 
+ 				     line_directive_len *= 2);
+@@ -5455,8 +5463,8 @@ write_output ()
+ 	strcpy (quote_string (line_directive + strlen (line_directive),
+ 			      (char *) next_string->filename),
+ 		"\n");
+-	safe_write (fileno (stdout), line_directive, strlen (line_directive));
+-	safe_write (fileno (stdout),
++    safe_write (fileno (stdout), line_directive, strlen (line_directive));
++    safe_write (fileno (stdout),
+ 		    (char *) next_string->contents, next_string->len);
+       }	      
+       next_string = next_string->chain;
+@@ -5464,8 +5472,8 @@ write_output ()
+     else {
+       len = (next_string
+ 	     ? (next_string->output_mark 
+-		- (cur_buf_loc - outbuf.buf))
+-	     : outbuf.bufp - cur_buf_loc);
++        - (int)(cur_buf_loc - outbuf.buf))
++         : (int)(outbuf.bufp - cur_buf_loc));
+       
+       safe_write (fileno (stdout), (char *) cur_buf_loc, len);
+       cur_buf_loc += len;
+@@ -5591,7 +5599,7 @@ create_definition (buf, limit, op)
+ 	  break;
+ 	}
+       }
+-      temp->length = bp - temp->name;
++      temp->length = (int)(bp - temp->name);
+       if (rest_args == 1)
+ 	bp += REST_EXTENSION_LENGTH;
+       arglengths += temp->length + 2;
+@@ -5778,7 +5786,7 @@ check_macro_name (symname, usage)
+ 
+   for (p = symname; is_idchar[*p]; p++)
+     ;
+-  sym_length = p - symname;
++  sym_length = (int)(p - symname);
+   if (sym_length == 0
+       || (sym_length == 1 && *symname == 'L' && (*p == '\'' || *p == '"')))
+     error ("invalid %s name", usage);
+@@ -5913,7 +5921,7 @@ collect_expansion (buf, end, nargs, arglist)
+      so this is an upper bound.
+      The extra 3 are for invented trailing newline-marker and final null.  */
+   maxsize = (sizeof (DEFINITION)
+-	     + (limit - p) + 3);
++         + (int)(limit - p) + 3);
+   defn = (DEFINITION *) xcalloc (1, maxsize);
+ 
+   defn->nargs = nargs;
+@@ -6068,7 +6076,7 @@ collect_expansion (buf, end, nargs, arglist)
+ 
+       --exp_p;
+       while (p != limit && is_idchar[*p]) p++;
+-      id_len = p - id_beg;
++      id_len = (int)(p - id_beg);
+ 
+       if (is_idstart[c]
+ 	  && ! (id_len == 1 && c == 'L' && (*p == '\'' || *p == '"'))) {
+@@ -6117,7 +6125,7 @@ collect_expansion (buf, end, nargs, arglist)
+ 	    endpat = tpat;
+ 
+ 	    tpat->argno = arg->argno;
+-	    tpat->nchars = exp_p - lastp;
++        tpat->nchars = (int)(exp_p - lastp);
+ 	    {
+ 	      register U_CHAR *p1 = p;
+ 	      SKIP_WHITE_SPACE (p1);
+@@ -6155,7 +6163,7 @@ collect_expansion (buf, end, nargs, arglist)
+ 
+   *exp_p = '\0';
+ 
+-  defn->length = exp_p - defn->expansion;
++  defn->length = (int)(exp_p - defn->expansion);
+ 
+   /* Crash now if we overrun the allocated size.  */
+   if (defn->length + 1 > maxsize)
+@@ -6453,7 +6461,7 @@ read_token_list (bpp, limit, error_flag)
+     temp->name[bp - beg] = 0;
+     temp->next = token_ptrs;
+     token_ptrs = temp;
+-    temp->length = bp - beg;
++    temp->length = (int)(bp - beg);
+ 
+     SKIP_WHITE_SPACE (bp);
+ 
+@@ -6658,7 +6666,7 @@ do_line (buf, limit, op, keyword)
+ 	goto fname_done;
+       }
+   fname_done:
+-    fname_length = p - fname;
++    fname_length = (int)(p - fname);
+ 
+     SKIP_WHITE_SPACE (bp);
+     if (*bp) {
+@@ -6773,7 +6781,7 @@ do_error (buf, limit, op, keyword)
+      FILE_BUF *op;
+      struct directive *keyword;
+ {
+-  int length = limit - buf;
++  int length = (int)(limit - buf);
+   U_CHAR *copy = (U_CHAR *) alloca (length + 1);
+   bcopy ((char *) buf, (char *) copy, length);
+   copy[length] = 0;
+@@ -6792,7 +6800,7 @@ do_warning (buf, limit, op, keyword)
+      FILE_BUF *op;
+      struct directive *keyword;
+ {
+-  int length = limit - buf;
++  int length = (int)(limit - buf);
+   U_CHAR *copy = (U_CHAR *) alloca (length + 1);
+   bcopy ((char *) buf, (char *) copy, length);
+   copy[length] = 0;
+@@ -6837,7 +6845,7 @@ do_ident (buf, limit, op, keyword)
+   buf = (U_CHAR *) alloca (trybuf.bufp - trybuf.buf + 1);
+   bcopy ((char *) trybuf.buf, (char *) buf, trybuf.bufp - trybuf.buf);
+   limit = buf + (trybuf.bufp - trybuf.buf);
+-  len = (limit - buf);
++  len = (int)(limit - buf);
+   free (trybuf.buf);
+ 
+   /* Output directive name.  */
+@@ -7184,7 +7192,7 @@ skip_if_group (ip, any, op)
+ 
+   if (output_conditionals && op != 0) {
+     char *ptr = "#failed\n";
+-    int len = strlen (ptr);
++    int len = (int)strlen (ptr);
+ 
+     if (op->bufp > op->buf && op->bufp[-1] != '\n')
+       {
+@@ -7331,7 +7339,7 @@ skip_if_group (ip, any, op)
+ 	  else break;
+ 	}
+       }
+-      ident_length = bp - cp;
++      ident_length = (int)(bp - cp);
+       ident = cp;
+       after_ident = bp;
+ 
+@@ -7433,7 +7441,7 @@ skip_if_group (ip, any, op)
+  done:
+   if (output_conditionals && op != 0) {
+     char *ptr = "#endfailed\n";
+-    int len = strlen (ptr);
++    int len = (int)strlen (ptr);
+ 
+     if (op->bufp > op->buf && op->bufp[-1] != '\n')
+       {
+@@ -7930,7 +7938,7 @@ output_line_directive (ip, op, conditional, file_change)
+ #endif
+ #endif
+   *line_end++ = '\n';
+-  len = line_end - line_directive_buf;
++  len = (int)(line_end - line_directive_buf);
+   check_expand (op, len + 1);
+   if (op->bufp > op->buf && op->bufp[-1] != '\n')
+     *op->bufp++ = '\n';
+@@ -8264,7 +8272,7 @@ macroexpand (hp, op)
+ 	  }
+ 
+ 	  bcopy ((char *) p1, (char *) (xbuf + totlen), l1 - p1);
+-	  totlen += l1 - p1;
++      totlen += (int)(l1 - p1);
+ 	  if (!traditional && ap->raw_after == 0) {
+ 	    /* Ordinary expanded use of the argument.
+ 	       Put in newline-space markers to prevent token pasting.  */
+@@ -8386,7 +8394,7 @@ macarg (argptr, rest_args)
+       && bp != ip->buf + ip->length) {
+     if (argptr != 0) {
+       argptr->raw = ip->bufp;
+-      argptr->raw_length = bp - ip->bufp;
++      argptr->raw_length = (int)(bp - ip->bufp);
+       argptr->newlines = newlines;
+     }
+     ip->bufp = bp;
+@@ -8395,7 +8403,7 @@ macarg (argptr, rest_args)
+        We must pop levels and keep parsing.
+        Therefore, we must allocate a temporary buffer and copy
+        the macro argument into it.  */
+-    int bufsize = bp - ip->bufp;
++    int bufsize = (int)(bp - ip->bufp);
+     int extra = newlines;
+     U_CHAR *buffer = (U_CHAR *) xmalloc (bufsize + extra + 1);
+     int final_start = 0;
+@@ -8418,7 +8426,7 @@ macarg (argptr, rest_args)
+       bp = macarg1 (ip->bufp, ip->buf + ip->length, &paren,
+ 		    &newlines, &comments, rest_args);
+       final_start = bufsize;
+-      bufsize += bp - ip->bufp;
++      bufsize += (int)(bp - ip->bufp);
+       extra += newlines;
+       buffer = (U_CHAR *) xrealloc (buffer, bufsize + extra + 1);
+       bcopy ((char *) ip->bufp, (char *) (buffer + bufsize - (bp - ip->bufp)),
+@@ -8704,7 +8712,7 @@ discard_comments (start, length, newlines)
+     }
+   }
+ 
+-  return obp - start;
++  return (int)(obp - start);
+ }
+ 
+ /* Turn newlines to spaces in the string of length LENGTH at START,
+@@ -8757,7 +8765,7 @@ change_newlines (start, length)
+     }
+   }
+ 
+-  return obp - start;
++  return (int)(obp - start);
+ }
+ 
+ /* my_strerror - return the descriptive text associated with an
+@@ -9148,7 +9156,7 @@ grow_outbuf (obuf, needed)
+   /* Make it at least twice as big as it is now.  */
+   obuf->length *= 2;
+   /* Make it have at least 150% of the free space we will need.  */
+-  minsize = (3 * needed) / 2 + (obuf->bufp - obuf->buf);
++  minsize = (3 * needed) / 2 + (int)(obuf->bufp - obuf->buf);
+   if (minsize > obuf->length)
+     obuf->length = minsize;
+ 
+@@ -9194,7 +9202,7 @@ install (name, len, type, value, hash)
+     p = name;
+     while (is_idchar[*p])
+       p++;
+-    len = p - name;
++    len = (int)(p - name);
+   }
+ 
+   if (hash < 0)
+@@ -9243,7 +9251,7 @@ lookup (name, len, hash)
+ 
+   if (len < 0) {
+     for (bp = name; is_idchar[*bp]; bp++) ;
+-    len = bp - name;
++    len = (int)(bp - name);
+   }
+ 
+   if (hash < 0)
+@@ -9709,7 +9717,7 @@ make_definition (str, op)
+   ip->nominal_fname = ip->fname = ip->include_fname = "*Initialization*";
+ 
+   ip->buf = ip->bufp = buf;
+-  ip->length = strlen ((char *) buf);
++  ip->length = (int)strlen ((char *) buf);
+   ip->lineno = 1;
+   ip->macro = 0;
+   ip->free_ptr = 0;
+@@ -9738,7 +9746,7 @@ make_undef (str, op)
+   ip->nominal_fname = ip->fname = ip->include_fname = "*undef*";
+ 
+   ip->buf = ip->bufp = (U_CHAR *) str;
+-  ip->length = strlen (str);
++  ip->length = (int)strlen (str);
+   ip->lineno = 1;
+   ip->macro = 0;
+   ip->free_ptr = 0;
+@@ -9794,7 +9802,7 @@ make_assertion (option, str)
+   ip->nominal_fname = ip->fname = ip->include_fname = "*Initialization*";
+ 
+   ip->buf = ip->bufp = buf;
+-  ip->length = strlen ((char *) buf);
++  ip->length = (int)strlen ((char *) buf);
+   ip->lineno = 1;
+   ip->macro = 0;
+   ip->free_ptr = 0;
+@@ -9912,7 +9920,7 @@ append_include_chain (first, last)
+     first_bracket_include = first;
+ 
+   for (dir = first; ; dir = dir->next) {
+-    int len = strlen (dir->fname) + INCLUDE_LEN_FUDGE;
++    int len = (int)strlen (dir->fname) + INCLUDE_LEN_FUDGE;
+     if (len > max_include_len)
+       max_include_len = len;
+     if (dir == last)
+@@ -9932,7 +9940,7 @@ deps_output (string, spacer)
+      char *string;
+      int spacer;
+ {
+-  int size = strlen (string);
++  int size = (int)strlen (string);
+ 
+   if (size == 0)
+     return;
+diff --git a/src/tool/omniidl/cxx/idl.ll.source b/src/tool/omniidl/cxx/idl.ll.source
+index 5a949b2..c810475 100644
+--- a/src/tool/omniidl/cxx/idl.ll.source
++++ b/src/tool/omniidl/cxx/idl.ll.source
+@@ -31,6 +31,7 @@
+ #include <string.h>
+ #include <ctype.h>
+ #include <errno.h>
++#include <stdint.h>
+ 
+ #include <idlerr.h>
+ #include <idlutil.h>
+@@ -387,13 +388,16 @@ char octalToChar(char* s) {
+     IdlError(currentFile, yylineno, "Octal character value '%s' too big", s);
+   }
+ 
+-  return ret;
++  return (char)ret;
+ }
+ 
+ char hexToChar(char* s)  {
+   unsigned long ret = strtoul(s+2, 0, 16);
+ 
+-  return ret;
++  if (ret >= ULONG_MAX) {
++      IdlError(CurrentFile, yylineno, "Hex charachter value '%s' too big", s);
++  }
++  return (char)ret;
+ }
+ 
+ char escapeToChar(char* s) {
+@@ -423,13 +427,13 @@ IDL_UShort octalToWChar(char* s) {
+     IdlError(currentFile, yylineno, "Octal character value '%s' too big", s);
+   }
+ 
+-  return ret;
++  return (IDL_UShort)ret;
+ }
+ 
+ IDL_UShort hexToWChar(char* s) {
+   unsigned long ret = strtoul(s+2, 0, 16);
+ 
+-  return ret;
++  return (IDL_UShort)ret;
+ }
+ 
+ IDL_UShort escapeToWChar(char* s) {
+@@ -453,7 +457,7 @@ IDL_UShort escapeToWChar(char* s) {
+ }
+ 
+ char* escapedStringToString(char* s) {
+-  int   len = strlen(s);
++  int   len = (int)strlen(s);
+   char* ret = new char[len+1];
+   char  tmp[8];
+ 
+@@ -507,7 +511,7 @@ char* escapedStringToString(char* s) {
+ }
+ 
+ IDL_UShort* escapedStringToWString(char* s) {
+-  int         len = strlen(s);
++  int         len = (int)strlen(s);
+   IDL_UShort* ret = new IDL_UShort[len+1];
+   char        tmp[8];
+ 
+diff --git a/src/tool/omniidl/cxx/idl.yy.source b/src/tool/omniidl/cxx/idl.yy.source
+index b21881d..3ab7d64 100644
+--- a/src/tool/omniidl/cxx/idl.yy.source
++++ b/src/tool/omniidl/cxx/idl.yy.source
+@@ -29,6 +29,7 @@
+ 
+ #include <stdlib.h>
+ #include <string.h>
++#include <stdint.h>
+ 
+ #include <idlutil.h>
+ #include <idlerr.h>
+diff --git a/src/tool/omniidl/cxx/idldump.cc b/src/tool/omniidl/cxx/idldump.cc
+index 0552ed7..85ba29c 100644
+--- a/src/tool/omniidl/cxx/idldump.cc
++++ b/src/tool/omniidl/cxx/idldump.cc
+@@ -269,8 +269,8 @@ visitConst(Const* c)
+   case IdlType::tk_longlong:  printf("%ld", c->constAsLongLong());     break;
+   case IdlType::tk_ulonglong: printf("%lu", c->constAsULongLong());    break;
+ #  else
+-  case IdlType::tk_longlong:  printf("%Ld", c->constAsLongLong());     break;
+-  case IdlType::tk_ulonglong: printf("%Lu", c->constAsULongLong());    break;
++  case IdlType::tk_longlong:  printf("%lld", c->constAsLongLong());     break;
++  case IdlType::tk_ulonglong: printf("%llu", c->constAsULongLong());    break;
+ #  endif
+ 
+ #endif
+@@ -422,8 +422,8 @@ visitCaseLabel(CaseLabel* l)
+   case IdlType::tk_longlong:  printf("%ld", l->labelAsLongLong());  break;
+   case IdlType::tk_ulonglong: printf("%lu", l->labelAsULongLong()); break;
+ #  else
+-  case IdlType::tk_longlong:  printf("%Ld", l->labelAsLongLong());  break;
+-  case IdlType::tk_ulonglong: printf("%Lu", l->labelAsULongLong()); break;
++  case IdlType::tk_longlong:  printf("%lld", l->labelAsLongLong());  break;
++  case IdlType::tk_ulonglong: printf("%llu", l->labelAsULongLong()); break;
+ #  endif
+ 
+ #endif
+diff --git a/src/tool/omniidl/cxx/idlexpr.cc b/src/tool/omniidl/cxx/idlexpr.cc
+index c62f772..c87c645 100644
+--- a/src/tool/omniidl/cxx/idlexpr.cc
++++ b/src/tool/omniidl/cxx/idlexpr.cc
+@@ -74,12 +74,12 @@ IDL_Short IdlExpr::evalAsShort()
+   if (v.negative) {
+     if (v.s < -0x8000)
+       IdlError(file(), line(), "Value too small for short");
+-    return v.s;
++    return (IDL_Short)v.s;
+   }
+   else {
+     if (v.u > 0x7fff)
+       IdlError(file(), line(), "Value too large for short");
+-    return v.u;
++    return (IDL_Short)v.u;
+   }
+ }
+ IDL_Long IdlExpr::evalAsLong()
+@@ -104,7 +104,7 @@ IDL_UShort IdlExpr::evalAsUShort()
+   else if (v.u > 0xffff) {
+     IdlError(file(), line(), "Value too large for unsigned short");
+   }
+-  return v.u;
++  return (IDL_UShort)v.u;
+ }
+ IDL_ULong IdlExpr::evalAsULong()
+ {
+@@ -125,7 +125,7 @@ IDL_Octet IdlExpr::evalAsOctet()
+   else if (v.u > 0xff) {
+     IdlError(file(), line(), "Value too large for octet");
+   }
+-  return v.u;
++  return (IDL_Octet)v.u;
+ }
+ #ifdef HAS_LongLong
+ IDL_LongLong IdlExpr::evalAsLongLong()
+@@ -224,7 +224,7 @@ IDL_Float FloatExpr::evalAsFloat() {
+   IDL_Float    f(value_);
+   IdlFloatLiteral g(f);
+ #else
+-  IDL_Float    f = value_;
++  IDL_Float    f = (IDL_Float)value_;
+   IdlFloatLiteral g = f;
+ #endif
+ 
+@@ -366,7 +366,7 @@ IDL_Float ConstExpr::evalAsFloat() {
+   switch (c_->constKind()) {
+   case IdlType::tk_float:      r = c_->constAsFloat();      break;
+ #ifndef __VMS
+-  case IdlType::tk_double:     r = c_->constAsDouble();     break;
++  case IdlType::tk_double:     r = (IDL_Float)c_->constAsDouble();     break;
+ #else
+   case IdlType::tk_double:     r = (float)(double)c_->constAsDouble(); break;
+ #endif
+diff --git a/src/tool/omniidl/cxx/idlfixed.cc b/src/tool/omniidl/cxx/idlfixed.cc
+index 728c817..7d94557 100644
+--- a/src/tool/omniidl/cxx/idlfixed.cc
++++ b/src/tool/omniidl/cxx/idlfixed.cc
+@@ -491,7 +491,7 @@ divDigit(IDL_Octet* av, int ad, const IDL_Octet* bv, int bd, int pos)
+ static IDL_Fixed
+ realDiv(const IDL_Fixed& a, const IDL_Fixed& b, IDL_Boolean negative)
+ {
+-  int i, ai, bi, wi, ri, digits, scale, unscale, v, ad, bd, carry = 0;
++  int i, ai, wi, ri, digits, scale, unscale, ad, bd, carry = 0;
+ 
+   // This division algorithm basically does classic long division. The
+   // numerator, a, is loaded into the top digits of "running". The
+diff --git a/src/tool/omniidl/cxx/idlrepoId.cc b/src/tool/omniidl/cxx/idlrepoId.cc
+index 3857d71..7f28123 100644
+--- a/src/tool/omniidl/cxx/idlrepoId.cc
++++ b/src/tool/omniidl/cxx/idlrepoId.cc
+@@ -67,8 +67,8 @@ Prefix::
+ newScope(const char* name)
+ {
+   if (name[0] == '_') ++name;
+-  int len   = strlen(current()) + strlen(name) + 2;
+-  char* str = new char[len];
++  size_t len = strlen(current()) + strlen(name) + 2;
++  char*  str = new char[len];
+ 
+   strcpy(str, current());
+   if (str[0] != '\0') strcat(str, "/");
+@@ -278,8 +278,7 @@ void
+ DeclRepoId::
+ genRepoId()
+ {
+-  char* id;
+-  int   len;
++  size_t len;
+ 
+   // RepoId length = IDL: + prefix + "/" + identifier + : + maj + . + min + \0
+   len = 4 + strlen(prefix_) + 1 + strlen(identifier_) + 1 + 5 + 1 + 5 + 1;
+diff --git a/src/tool/omniidl/cxx/idlscope.cc b/src/tool/omniidl/cxx/idlscope.cc
+index 807f1da..a7e73d7 100644
+--- a/src/tool/omniidl/cxx/idlscope.cc
++++ b/src/tool/omniidl/cxx/idlscope.cc
+@@ -89,7 +89,7 @@ char*
+ ScopedName::
+ toString(IDL_Boolean qualify) const
+ {
+-  int       i;
++  size_t    i;
+   Fragment* f;
+ 
+   i = (qualify && absolute_) ? 2 : 0;
+diff --git a/src/tool/omniidl/cxx/lex.yy.cc b/src/tool/omniidl/cxx/lex.yy.cc
+index 7e76c62..6a08c6a 100644
+--- a/src/tool/omniidl/cxx/lex.yy.cc
++++ b/src/tool/omniidl/cxx/lex.yy.cc
+@@ -20,6 +20,7 @@
+ #include <string.h>
+ #include <errno.h>
+ #include <stdlib.h>
++#include <stdint.h>
+ 
+ /* end standard C headers. */
+ 
+diff --git a/src/tool/omniidl/cxx/y.tab.cc b/src/tool/omniidl/cxx/y.tab.cc
+index f01a8e9..67483e2 100644
+--- a/src/tool/omniidl/cxx/y.tab.cc
++++ b/src/tool/omniidl/cxx/y.tab.cc
+@@ -67,6 +67,7 @@
+ 
+ #include <stdlib.h>
+ #include <string.h>
++#include <stdint.h>
+ 
+ #include <idlutil.h>
+ #include <idlerr.h>
