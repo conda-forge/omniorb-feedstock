@@ -14,7 +14,7 @@ source:
     - omniorb-4.2.4-cmake.patch  # [win]
 
 build:
-  number: 3
+  number: 4
 
 requirements:
   build:
