@@ -16,6 +16,7 @@ source:
 build:
   number: 4
 
+
 requirements:
   build:
     - {{ compiler('c') }}
@@ -24,11 +25,10 @@ requirements:
     - make      # [unix]
     - cmake     # [win]
   host:
-    - python
+    - python  # [win]
     - openssl
     - zlib
   run:
-    - python
     - zlib
 
 test:
