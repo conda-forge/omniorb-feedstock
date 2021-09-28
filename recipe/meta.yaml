@@ -24,8 +24,8 @@ requirements:
     - autoconf  # [unix]
     - make      # [unix]
     - cmake     # [win]
-  host:
     - python  # [win]
+  host:
     - openssl
     - zlib
   run:
