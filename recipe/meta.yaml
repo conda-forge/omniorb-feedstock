@@ -14,7 +14,7 @@ source:
     - omniorb-4.2.4-cmake.patch  # [win]
 
 build:
-  number: 3
+  number: 4
 
 requirements:
   build:
@@ -27,31 +27,90 @@ requirements:
     - python
     - openssl
     - zlib
-  run:
-    - python
-    - zlib
 
 test:
   source_files:
     - idl/echo.idl
   commands:
-    - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
-    - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
-    - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
-    - omniidl -bcxx idl/echo.idl                                       # [unix]
-    - if not exist %LIBRARY_BIN%\\x86_win32\\omniORB4_rt.dll exit 1    # [win]
-    - if not exist %LIBRARY_BIN%\\x86_win32\\COS4_rt.dll exit 1        # [win]
-    - if not exist %LIBRARY_BIN%\\x86_win32\\omnithread_rt.dll exit 1  # [win]
-    - if not exist %LIBRARY_LIB%\\x86_win32\\omniORB4_rt.lib exit 1    # [win]
-    - if not exist %LIBRARY_LIB%\\x86_win32\\COS4_rt.lib exit 1        # [win]
-    - if not exist %LIBRARY_LIB%\\x86_win32\\omnithread_rt.lib exit 1  # [win]
+    - omniidl -bcxx idl/echo.idl  # [unix]
+
+outputs:
+  - name: omniorb-libs
+    requirements:
+      build:
+        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
+        - autoconf  # [unix]
+        - make      # [unix]
+        - cmake     # [win]
+      host:
+        - openssl
+        - zlib
+    files:
+      - lib/libomni*.so*             # [linux]
+      - lib/libCOS*.so*              # [linux]
+      - lib/libomni*.dylib           # [osx]
+      - lib/libCOS*.dylib            # [osx]
+      - Library/bin/x86_win32/*.dll  # [win]
+      - Library/lib/x86_win32/*.lib  # [win]
+    test:
+      commands:
+        - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
+        - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
+        - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
+        - if not exist %LIBRARY_BIN%\\x86_win32\\omniORB4_rt.dll exit 1    # [win]
+        - if not exist %LIBRARY_BIN%\\x86_win32\\COS4_rt.dll exit 1        # [win]
+        - if not exist %LIBRARY_BIN%\\x86_win32\\omnithread_rt.dll exit 1  # [win]
+        - if not exist %LIBRARY_LIB%\\x86_win32\\omniORB4_rt.lib exit 1    # [win]
+        - if not exist %LIBRARY_LIB%\\x86_win32\\COS4_rt.lib exit 1        # [win]
+        - if not exist %LIBRARY_LIB%\\x86_win32\\omnithread_rt.lib exit 1  # [win]
+  - name: omniorb
+    build:
+      run_exports:
+        - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
+    requirements:
+      build:
+        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
+        - autoconf  # [unix]
+        - make      # [unix]
+        - cmake     # [win]
+      host:
+        - python
+        - openssl
+        - zlib
+      run:
+        - python
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
+    files:
+      - bin/catior                            # [unix]
+      - bin/convertior                        # [unix]
+      - bin/genior                            # [unix]
+      - bin/nameclt                           # [unix]
+      - bin/omkdepend                         # [unix]
+      - bin/omni*                             # [unix]
+      - etc/omniORB-config                    # [unix]
+      - include/COS                           # [unix]
+      - include/omni*                         # [unix]
+      - lib/pkgconfig/omni*                   # [unix]
+      - lib/libomni*.a                        # [unix]
+      - lib/libCOS*.a                         # [unix]
+      - lib/python*/site-packages/omniidl     # [unix]
+      - lib/python*/site-packages/omniidl_be  # [unix]
+      - lib/python*/site-packages/_omni*      # [unix]
+      - share/idl/omniORB                     # [unix]
+      - var/omniNames-logs                    # [unix]
+      - Library/bin/x86_win32/*.exe           # [win]
+      - Library/include/COS                   # [win]
+      - Library/include/omni*                 # [win]
+      - Library/lib/cmake/OmniORB             # [win]
+      - Lib/site-packages/omniidl*            # [win]
 
 about:
   home: http://omniorb.sourceforge.net/index.html
   license: GPL-2.0-only
   license_file: COPYING
   summary: Robust high performance CORBA ORB for C++ and Python
-
   description: |
     omniORB is an Object Request Broker (ORB) which implements
     specification 2.6 of the Common Object Request Broker Architecture

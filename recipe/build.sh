@@ -16,3 +16,6 @@ cd build
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
 make -j$CPU_COUNT
 make install
+
+echo "Check site-packages"
+ls -l ${PREFIX}/lib/python*/site-packages/
