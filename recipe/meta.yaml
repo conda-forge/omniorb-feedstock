@@ -113,5 +113,6 @@ about:
 
 extra:
   recipe-maintainers:
+    - beenje
     - carlodri
     - lockhart
