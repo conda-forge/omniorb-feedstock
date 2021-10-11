@@ -36,13 +36,6 @@ Current build status
         <table>
           <thead><tr><th>Variant</th><th>Status</th></tr></thead>
           <tbody><tr>
-              <td>linux_64_python3.6.____cpython</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=linux&configuration=linux_64_python3.6.____cpython" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
               <td>linux_64_python3.7.____cpython</td>
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
@@ -61,13 +54,6 @@ Current build status
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
                   <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=linux&configuration=linux_64_python3.9.____cpython" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
-              <td>linux_ppc64le_python3.6.____cpython</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=linux&configuration=linux_ppc64le_python3.6.____cpython" alt="variant">
                 </a>
               </td>
             </tr><tr>
@@ -92,13 +78,6 @@ Current build status
                 </a>
               </td>
             </tr><tr>
-              <td>osx_64_python3.6.____cpython</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=osx&configuration=osx_64_python3.6.____cpython" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
               <td>osx_64_python3.7.____cpython</td>
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
@@ -117,13 +96,6 @@ Current build status
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
                   <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=osx&configuration=osx_64_python3.9.____cpython" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
-              <td>win_64_python3.6.____cpython</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=6439&branchName=master">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/omniorb-feedstock?branchName=master&jobName=win&configuration=win_64_python3.6.____cpython" alt="variant">
                 </a>
               </td>
             </tr><tr>
@@ -161,6 +133,7 @@ Current release info
 | Name | Downloads | Version | Platforms |
 | --- | --- | --- | --- |
 | [![Conda Recipe](https://img.shields.io/badge/recipe-omniorb-green.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-omniorb--libs-green.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) |
 
 Installing omniorb
 ==================
@@ -169,12 +142,13 @@ Installing `omniorb` from the `conda-forge` channel can be achieved by adding `c
 
 ```
 conda config --add channels conda-forge
+conda config --set channel_priority strict
 ```
 
-Once the `conda-forge` channel has been enabled, `omniorb` can be installed with:
+Once the `conda-forge` channel has been enabled, `omniorb, omniorb-libs` can be installed with:
 
 ```
-conda install omniorb
+conda install omniorb omniorb-libs
 ```
 
 It is possible to list all of the versions of `omniorb` available on your platform with:
@@ -247,6 +221,7 @@ In order to produce a uniquely identifiable distribution:
 Feedstock Maintainers
 =====================
 
+* [@beenje](https://github.com/beenje/)
 * [@carlodri](https://github.com/carlodri/)
 * [@lockhart](https://github.com/lockhart/)
 
