@@ -22,7 +22,7 @@ requirements:
     - {{ compiler('cxx') }}
     - autoconf  # [unix]
     - make      # [unix]
-    - cmake     # [win]
+    - cmake >=3.12  # [win]
   host:
     - python
     - openssl
@@ -42,7 +42,7 @@ outputs:
         - {{ compiler('cxx') }}
         - autoconf  # [unix]
         - make      # [unix]
-        - cmake     # [win]
+        - cmake >=3.12  # [win]
       host:
         - openssl
         - zlib
@@ -74,7 +74,7 @@ outputs:
         - {{ compiler('cxx') }}
         - autoconf  # [unix]
         - make      # [unix]
-        - cmake     # [win]
+        - cmake >=3.12  # [win]
       host:
         - python
         - openssl
