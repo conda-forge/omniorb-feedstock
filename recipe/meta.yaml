@@ -1,4 +1,4 @@
-{% set version = "4.2.4" %}
+{% set version = "4.2.5" %}
 
 package:
   name: omniorb
@@ -6,15 +6,15 @@ package:
 
 source:
   url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
-  sha256: 28c01cd0df76c1e81524ca369dc9e6e75f57dc70f30688c99c67926e4bdc7a6f
+  sha256: f05cf999fb2f4c24c1173b3c44ad97215591d0d1a48d49ac0843c464efe073bb
   patches:
     - patch-configure.diff
     - 0001-Avoid-kernel-128-character-shebang-limit.patch
     - 0002-Update-config-guess.patch
-    - omniorb-4.2.4-cmake.patch  # [win]
+    - omniorb-4.2.5-cmake.patch  # [win]
 
 build:
-  number: 6
+  number: 0
 
 requirements:
   build:
