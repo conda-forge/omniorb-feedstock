@@ -112,7 +112,7 @@ about:
   license: GPL-2.0-or-later OR LGPL-2.1-or-later
   license_file:
     - COPYING
-    - COPYING.lib
+    - COPYING.LIB
   summary: Robust high performance CORBA ORB for C++ and Python
   description: |
     omniORB is an Object Request Broker (ORB) which implements
