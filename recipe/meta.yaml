@@ -47,6 +47,8 @@ outputs:
         - openssl
         - zlib
     files:
+      - include                      # [unix]
+      - Library/include              # [win]
       - lib/libomni*.so*             # [linux]
       - lib/libCOS*.so*              # [linux]
       - lib/libomni*.dylib           # [osx]
@@ -57,9 +59,15 @@ outputs:
       - Library/lib/omni*.lib        # [win]
     test:
       commands:
+        - test -f ${PREFIX}/include/omniconfig.h                           # [unix]
+        - test -f ${PREFIX}/include/omnithread.h                           # [unix]
+        - test -f ${PREFIX}/include/omniORB4/acconfig.h                    # [unix]
         - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
         - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
         - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
+        - if not exist %LIBRARY_INC%\\omniconfig.h exit 1                  # [win]
+        - if not exist %LIBRARY_INC%\\omnithread.h exit 1                  # [win]
+        - if not exist %LIBRARY_INC%\\omniORB4\\acconfig.h exit 1          # [win]
         - if not exist %LIBRARY_BIN%\\omniORB4_rt.dll exit 1               # [win]
         - if not exist %LIBRARY_BIN%\\COS4_rt.dll exit 1                   # [win]
         - if not exist %LIBRARY_BIN%\\omnithread_rt.dll exit 1             # [win]
@@ -89,7 +97,6 @@ outputs:
       # Let conda-build only include new files from each directory
       - bin                                   # [unix]
       - etc                                   # [unix]
-      - include                               # [unix]
       - lib/pkgconfig                         # [unix]
       - lib/libomni*.a                        # [unix]
       - lib/libCOS*.a                         # [unix]
@@ -97,7 +104,6 @@ outputs:
       - share/idl/omniORB                     # [unix]
       - var/omniNames-logs                    # [unix]
       - Library/bin/*.exe                     # [win]
-      - Library/include                       # [win]
       - Library/lib/cmake/OmniORB             # [win]
       - Lib/site-packages                     # [win]
 
