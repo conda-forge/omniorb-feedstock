@@ -14,7 +14,7 @@ source:
     - omniorb-4.2.5-cmake.patch  # [win]
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   build:
@@ -51,19 +51,21 @@ outputs:
       - lib/libCOS*.so*              # [linux]
       - lib/libomni*.dylib           # [osx]
       - lib/libCOS*.dylib            # [osx]
-      - Library/bin/x86_win32/*.dll  # [win]
-      - Library/lib/x86_win32/*.lib  # [win]
+      - Library/bin/COS*.dll         # [win]
+      - Library/bin/omni*.dll        # [win]
+      - Library/lib/COS*.lib         # [win]
+      - Library/lib/omni*.lib        # [win]
     test:
       commands:
         - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
         - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
         - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\omniORB4_rt.dll exit 1    # [win]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\COS4_rt.dll exit 1        # [win]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\omnithread_rt.dll exit 1  # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\omniORB4_rt.lib exit 1    # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\COS4_rt.lib exit 1        # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\omnithread_rt.lib exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\omniORB4_rt.dll exit 1               # [win]
+        - if not exist %LIBRARY_BIN%\\COS4_rt.dll exit 1                   # [win]
+        - if not exist %LIBRARY_BIN%\\omnithread_rt.dll exit 1             # [win]
+        - if not exist %LIBRARY_LIB%\\omniORB4_rt.lib exit 1               # [win]
+        - if not exist %LIBRARY_LIB%\\COS4_rt.lib exit 1                   # [win]
+        - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
   - name: omniorb
     build:
       run_exports:
@@ -94,7 +96,7 @@ outputs:
       - lib/python{{ PY_VER }}/site-packages  # [unix]
       - share/idl/omniORB                     # [unix]
       - var/omniNames-logs                    # [unix]
-      - Library/bin/x86_win32/*.exe           # [win]
+      - Library/bin/*.exe                     # [win]
       - Library/include                       # [win]
       - Library/lib/cmake/OmniORB             # [win]
       - Lib/site-packages                     # [win]
