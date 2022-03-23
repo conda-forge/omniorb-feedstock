@@ -14,7 +14,7 @@ source:
     - omniorb-4.2.5-cmake.patch  # [win]
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   build:
@@ -47,23 +47,33 @@ outputs:
         - openssl
         - zlib
     files:
+      - include                      # [unix]
+      - Library/include              # [win]
       - lib/libomni*.so*             # [linux]
       - lib/libCOS*.so*              # [linux]
       - lib/libomni*.dylib           # [osx]
       - lib/libCOS*.dylib            # [osx]
-      - Library/bin/x86_win32/*.dll  # [win]
-      - Library/lib/x86_win32/*.lib  # [win]
+      - Library/bin/COS*.dll         # [win]
+      - Library/bin/omni*.dll        # [win]
+      - Library/lib/COS*.lib         # [win]
+      - Library/lib/omni*.lib        # [win]
     test:
       commands:
+        - test -f ${PREFIX}/include/omniconfig.h                           # [unix]
+        - test -f ${PREFIX}/include/omnithread.h                           # [unix]
+        - test -f ${PREFIX}/include/omniORB4/acconfig.h                    # [unix]
         - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
         - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
         - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\omniORB4_rt.dll exit 1    # [win]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\COS4_rt.dll exit 1        # [win]
-        - if not exist %LIBRARY_BIN%\\x86_win32\\omnithread_rt.dll exit 1  # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\omniORB4_rt.lib exit 1    # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\COS4_rt.lib exit 1        # [win]
-        - if not exist %LIBRARY_LIB%\\x86_win32\\omnithread_rt.lib exit 1  # [win]
+        - if not exist %LIBRARY_INC%\\omniconfig.h exit 1                  # [win]
+        - if not exist %LIBRARY_INC%\\omnithread.h exit 1                  # [win]
+        - if not exist %LIBRARY_INC%\\omniORB4\\acconfig.h exit 1          # [win]
+        - if not exist %LIBRARY_BIN%\\omniORB4_rt.dll exit 1               # [win]
+        - if not exist %LIBRARY_BIN%\\COS4_rt.dll exit 1                   # [win]
+        - if not exist %LIBRARY_BIN%\\omnithread_rt.dll exit 1             # [win]
+        - if not exist %LIBRARY_LIB%\\omniORB4_rt.lib exit 1               # [win]
+        - if not exist %LIBRARY_LIB%\\COS4_rt.lib exit 1                   # [win]
+        - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
   - name: omniorb
     build:
       run_exports:
@@ -87,22 +97,22 @@ outputs:
       # Let conda-build only include new files from each directory
       - bin                                   # [unix]
       - etc                                   # [unix]
-      - include                               # [unix]
       - lib/pkgconfig                         # [unix]
       - lib/libomni*.a                        # [unix]
       - lib/libCOS*.a                         # [unix]
       - lib/python{{ PY_VER }}/site-packages  # [unix]
       - share/idl/omniORB                     # [unix]
       - var/omniNames-logs                    # [unix]
-      - Library/bin/x86_win32/*.exe           # [win]
-      - Library/include                       # [win]
+      - Library/bin/*.exe                     # [win]
       - Library/lib/cmake/OmniORB             # [win]
       - Lib/site-packages                     # [win]
 
 about:
   home: http://omniorb.sourceforge.net/index.html
-  license: GPL-2.0-only
-  license_file: COPYING
+  license: GPL-2.0-or-later OR LGPL-2.1-or-later
+  license_file:
+    - COPYING
+    - COPYING.LIB
   summary: Robust high performance CORBA ORB for C++ and Python
   description: |
     omniORB is an Object Request Broker (ORB) which implements

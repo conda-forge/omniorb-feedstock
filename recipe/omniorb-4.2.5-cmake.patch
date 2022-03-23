@@ -31,7 +31,7 @@ index 0000000..b345416
 +  - cmake  --build .
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 new file mode 100755
-index 0000000..3df02dc
+index 0000000..7fcf57c
 --- /dev/null
 +++ b/CMakeLists.txt
 @@ -0,0 +1,64 @@
@@ -82,8 +82,8 @@ index 0000000..3df02dc
 +include(package_config.cmake)
 +
 +if (WIN32)
-+    set(OMNI_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR}/x86_win32)
-+    set(OMNI_ARCHIVE_DESTINATION ${CMAKE_INSTALL_LIBDIR}/x86_win32)
++    set(OMNI_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR})
++    set(OMNI_ARCHIVE_DESTINATION ${CMAKE_INSTALL_LIBDIR})
 +else ()
 +    set(OMNI_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR})
 +    set(OMNI_ARCHIVE_DESTINATION ${CMAKE_INSTALL_LIBDIR}/static)
