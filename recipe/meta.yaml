@@ -14,7 +14,7 @@ source:
     - omniorb-4.2.5-cmake.patch  # [win]
 
 build:
-  number: 1
+  number: 2
 
 requirements:
   build:
@@ -47,8 +47,15 @@ outputs:
         - openssl
         - zlib
     files:
-      - include                      # [unix]
-      - Library/include              # [win]
+      - include/COS                  # [unix]
+      - include/omniORB4             # [unix]
+      - include/omnithread           # [unix]
+      - include/omni*                # [unix]
+      - Library/include/COS          # [win]
+      - Library/include/omniORB4     # [win]
+      - Library/include/omnithread   # [win]
+      - Library/include/omniVms      # [win]
+      - Library/include/omni*        # [win]
       - lib/libomni*.so*             # [linux]
       - lib/libCOS*.so*              # [linux]
       - lib/libomni*.dylib           # [osx]
