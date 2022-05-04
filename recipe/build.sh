@@ -13,8 +13,19 @@ mkdir build
 autoconf
 cd build
 ../configure --prefix="${PREFIX}" \
+             --host=$host_alias \
+             --build=$build_alias \
              --with-openssl \
              --with-omniORB-config="${PREFIX}/etc/omniORB-config/omniORB.cfg" \
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
+
+if [[ "$host_alias" != "$build_alias" ]]
+then
+  echo "Build the IDL to Cpp compiler"
+  make CC=$CC_FOR_BUILD -C src/tool/omniidl/cxx/cccp
+  make CXX=$CXX_FOR_BUILD -C src/tool/omniidl/cxx
+  make CC=$CC_FOR_BUILD -C src/tool/omkdepend
+fi
+
 make -j$CPU_COUNT
 make install
