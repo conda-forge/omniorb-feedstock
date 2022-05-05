@@ -10,7 +10,7 @@ mkdir -p ${PREFIX}/etc/omniORB-config
 touch ${PREFIX}/etc/omniORB-config/.mkdir
 
 mkdir build
-autoconf
+[[ "$host_alias" == "$build_alias" ]] && autoconf
 cd build
 ../configure --prefix="${PREFIX}" \
              --host=$host_alias \
