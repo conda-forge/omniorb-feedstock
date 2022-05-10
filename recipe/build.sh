@@ -19,6 +19,7 @@ then
 
   mkdir build-native
   cd build-native
+
   LDFLAGS_FOR_BUILD=$(echo $LDFLAGS | sed "s?$PREFIX?$BUILD_PREFIX?g")
   LDFLAGS_LD_FOR_BUILD=$(echo $LDFLAGS_LD | sed "s?$PREFIX?$BUILD_PREFIX?g")
   ../configure --prefix="${BUILD_PREFIX}" \
@@ -37,6 +38,11 @@ then
   make -j$CPU_COUNT
   make install
   cd ..
+
+  # Extra options to cross compile
+  # --disable-longdouble is needed on Apple silicon
+  # sizeof long double is 8 (same as long)
+  CONFIGURE_CROSS_OPTIONS="--host=$host_alias --build=$build_alias --disable-longdouble"
 fi
 
 mkdir -p ${PREFIX}/var/omniNames-logs
@@ -46,9 +52,7 @@ touch ${PREFIX}/etc/omniORB-config/.mkdir
 
 mkdir build
 cd build
-../configure --prefix="${PREFIX}" \
-             --host=$host_alias \
-             --build=$build_alias \
+../configure --prefix="${PREFIX}" $CONFIGURE_CROSS_OPTIONS \
              --with-openssl \
              --with-omniORB-config="${PREFIX}/etc/omniORB-config/omniORB.cfg" \
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
