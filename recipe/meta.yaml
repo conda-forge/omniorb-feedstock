@@ -18,6 +18,9 @@ build:
 
 requirements:
   build:
+    - python                                 # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    - gnuconfig  # [unix]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - autoconf  # [unix]
@@ -27,6 +30,9 @@ requirements:
     - python
     - openssl
     - zlib
+  run:
+    - python
+    - {{ pin_subpackage('omniorb-libs', exact=True) }}
 
 test:
   source_files:
@@ -36,6 +42,9 @@ test:
 
 outputs:
   - name: omniorb-libs
+    build:
+      run_exports:
+        - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
     requirements:
       build:
         - {{ compiler('c') }}
@@ -82,23 +91,6 @@ outputs:
         - if not exist %LIBRARY_LIB%\\COS4_rt.lib exit 1                   # [win]
         - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
   - name: omniorb
-    build:
-      run_exports:
-        - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
-    requirements:
-      build:
-        - {{ compiler('c') }}
-        - {{ compiler('cxx') }}
-        - autoconf  # [unix]
-        - make      # [unix]
-        - cmake >=3.12  # [win]
-      host:
-        - python
-        - openssl
-        - zlib
-      run:
-        - python
-        - {{ pin_subpackage('omniorb-libs', exact=True) }}
     files:
       # WARNING! globs aren't supported for directories (only files)
       # Let conda-build only include new files from each directory
