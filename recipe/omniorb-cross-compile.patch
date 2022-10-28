@@ -1,0 +1,14 @@
+diff --git a/src/dir.mk b/src/dir.mk
+index 7d1d4f2..f22d04a 100644
+--- a/src/dir.mk
++++ b/src/dir.mk
+@@ -12,9 +12,7 @@ endif
+ 
+ SUBDIRS += lib
+ 
+-ifndef EmbeddedSystem
+ SUBDIRS += appl services
+-endif
+ 
+ all::
+ 	@echo
