@@ -11,10 +11,11 @@ source:
     - patch-configure.diff
     - 0001-Avoid-kernel-128-character-shebang-limit.patch
     - 0002-Update-config-guess.patch
-    - omniorb-4.2.5-cmake.patch  # [win]
+    - omniorb-4.2.5-cmake.patch    # [win]
+    - omniorb-cross-compile.patch  # [build_platform != target_platform]
 
 build:
-  number: 3
+  number: 4
 
 requirements:
   build:
