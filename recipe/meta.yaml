@@ -61,6 +61,7 @@ outputs:
       - include/omniORB4             # [unix]
       - include/omnithread           # [unix]
       - include/omni*                # [unix]
+      - lib/pkgconfig                # [unix]
       - Library/include/COS          # [win]
       - Library/include/omniORB4     # [win]
       - Library/include/omnithread   # [win]
@@ -97,7 +98,6 @@ outputs:
       # Let conda-build only include new files from each directory
       - bin                                   # [unix]
       - etc                                   # [unix]
-      - lib/pkgconfig                         # [unix]
       - lib/libomni*.a                        # [unix]
       - lib/libCOS*.a                         # [unix]
       - lib/python{{ PY_VER }}/site-packages  # [unix]
