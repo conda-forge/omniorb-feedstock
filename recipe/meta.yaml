@@ -15,7 +15,7 @@ source:
     - omniorb-cross-compile.patch  # [build_platform != target_platform]
 
 build:
-  number: 4
+  number: 5
 
 requirements:
   build:
@@ -61,7 +61,7 @@ outputs:
       - include/omniORB4             # [unix]
       - include/omnithread           # [unix]
       - include/omni*                # [unix]
-      - lib/pkgconfig                # [unix]
+      - lib/pkgconfig/omni*.pc       # [unix]
       - Library/include/COS          # [win]
       - Library/include/omniORB4     # [win]
       - Library/include/omnithread   # [win]
@@ -75,6 +75,7 @@ outputs:
       - Library/bin/omni*.dll        # [win]
       - Library/lib/COS*.lib         # [win]
       - Library/lib/omni*.lib        # [win]
+      - Library/lib/cmake/OmniORB    # [win]
     test:
       commands:
         - test -f ${PREFIX}/include/omniconfig.h                           # [unix]
@@ -83,6 +84,7 @@ outputs:
         - test -f ${PREFIX}/lib/libomniORB4${SHLIB_EXT}                    # [unix]
         - test -f ${PREFIX}/lib/libCOS4${SHLIB_EXT}                        # [unix]
         - test -f ${PREFIX}/lib/libomnithread${SHLIB_EXT}                  # [unix]
+        - test -f ${PREFIX}/lib/pkgconfig/omniORB4.pc                      # [unix]
         - if not exist %LIBRARY_INC%\\omniconfig.h exit 1                  # [win]
         - if not exist %LIBRARY_INC%\\omnithread.h exit 1                  # [win]
         - if not exist %LIBRARY_INC%\\omniORB4\\acconfig.h exit 1          # [win]
@@ -95,17 +97,28 @@ outputs:
   - name: omniorb
     files:
       # WARNING! globs aren't supported for directories (only files)
-      # Let conda-build only include new files from each directory
-      - bin                                   # [unix]
-      - etc                                   # [unix]
-      - lib/libomni*.a                        # [unix]
-      - lib/libCOS*.a                         # [unix]
-      - lib/python{{ PY_VER }}/site-packages  # [unix]
-      - share/idl/omniORB                     # [unix]
-      - var/omniNames-logs                    # [unix]
-      - Library/bin/*.exe                     # [win]
-      - Library/lib/cmake/OmniORB             # [win]
-      - Lib/site-packages                     # [win]
+      # conda-build will NOT filter on new files only!
+      - bin/catior                                       # [unix]
+      - bin/convertior                                   # [unix]
+      - bin/genior                                       # [unix]
+      - bin/nameclt                                      # [unix]
+      - bin/omkdepend                                    # [unix]
+      - bin/omni*                                        # [unix]
+      - etc/omniORB-config                               # [unix]
+      - lib/libomni*.a                                   # [unix]
+      - lib/libCOS*.a                                    # [unix]
+      - lib/python{{ PY_VER }}/site-packages/_omniidl*   # [unix]
+      - lib/python{{ PY_VER }}/site-packages/omniidl     # [unix]
+      - lib/python{{ PY_VER }}/site-packages/omniidl_be  # [unix]
+      - share/idl/omniORB                                # [unix]
+      - var/omniNames-logs                               # [unix]
+      - Library/bin/catior.exe                           # [win]
+      - Library/bin/convertior.exe                       # [win]
+      - Library/bin/genior.exe                           # [win]
+      - Library/bin/nameclt.exe                          # [win]
+      - Library/bin/omni*.exe                            # [win]
+      - Lib/site-packages/omniidl                        # [win]
+      - Lib/site-packages/omniidl_be                     # [win]
 
 about:
   home: http://omniorb.sourceforge.net/index.html
