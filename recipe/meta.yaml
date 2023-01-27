@@ -15,7 +15,7 @@ source:
     - omniorb-cross-compile.patch  # [build_platform != target_platform]
 
 build:
-  number: 5
+  number: 6
 
 requirements:
   build:
