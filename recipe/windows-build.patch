@@ -1,0 +1,127 @@
+diff --git a/config/config.mk b/config/config.mk
+index a25b6d5..c433757 100644
+--- a/config/config.mk
++++ b/config/config.mk
+@@ -26,7 +26,7 @@
+ # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
+ # edit the make variables, such as CC and CXX, in the file.
+ 
+-#platform = x86_win32_vs_16
++platform = x86_win32_vs_16
+ #platform = x86_win32_vs_15
+ #platform = x86_win32_vs_14
+ #platform = x86_win32_vs_12
+diff --git a/mk/platforms/x86_win32_vs_16.mk b/mk/platforms/x86_win32_vs_16.mk
+index 01aaf3b..8a0dea9 100644
+--- a/mk/platforms/x86_win32_vs_16.mk
++++ b/mk/platforms/x86_win32_vs_16.mk
+@@ -6,7 +6,7 @@
+ WindowsNT = 1
+ x86Processor = 1
+ 
+-compiler_version_suffix=_vc16
++compiler_version_suffix=
+ 
+ WINVER = 0x0501
+ 
+@@ -23,33 +23,34 @@ ABSTOP = $(shell cd $(TOP); pwd)
+ 
+ #PYTHON = /cygdrive/c/Python27/python
+ #PYTHON = /cygdrive/c/Python37/python
++PYTHON = $(PYTHONPATHOMNI)
+ 
+ 
+ # Use the following set of flags to build and use multithreaded DLLs
+ #
+ MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zi -nologo
+-MSVC_DLL_CXXLINKNODEBUGOPTIONS = -nologo -manifest -DEBUG
++MSVC_DLL_CXXLINKNODEBUGOPTIONS = -nologo -manifest -DEBUG -MACHINE:X64
+ MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -Zi -nologo
+-MSVC_DLL_CLINKNODEBUGOPTIONS   = -nologo -manifest -DEBUG
++MSVC_DLL_CLINKNODEBUGOPTIONS   = -nologo -manifest -DEBUG -MACHINE:X64
+ #
+ MSVC_DLL_CXXDEBUGFLAGS         = -MDd -EHs -RTC1 -GS -GR -Zi -nologo
+-MSVC_DLL_CXXLINKDEBUGOPTIONS   = -nologo -manifest -DEBUG
++MSVC_DLL_CXXLINKDEBUGOPTIONS   = -nologo -manifest -DEBUG -MACHINE:X64
+ MSVC_DLL_CDEBUGFLAGS           = -MDd -RTC1 -GS -GR -Zd -Zi -nologo
+-MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -manifest -DEBUG
++MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -manifest -DEBUG -MACHINE:X64
+ #
+ # Or
+ #
+ # Use the following set of flags to build and use multithread static libraries
+ #
+ MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MT -EHs -GS -GR -Zi -nologo
+-MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = -nologo -manifest -DEBUG
++MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = -nologo -manifest -DEBUG -MACHINE:X64
+ MSVC_STATICLIB_CNODEBUGFLAGS         = -MT -GS -GR -Zi -nologo
+-MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = -nologo -manifest -DEBUG
++MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = -nologo -manifest -DEBUG -MACHINE:X64
+ 
+ MSVC_STATICLIB_CXXDEBUGFLAGS         = -MTd -EHs -RTC1 -GS -GR -Zi -nologo
+-MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -nologo -manifest -DEBUG
++MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -nologo -manifest -DEBUG -MACHINE:X64
+ MSVC_STATICLIB_CDEBUGFLAGS           = -MTd -RTC1 -GS -GR -Zi -nologo
+-MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -nologo -manifest -DEBUG
++MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -nologo -manifest -DEBUG -MACHINE:X64
+ 
+ 
+ #
+diff --git a/mk/win32.mk b/mk/win32.mk
+index 1508d39..1d57f85 100644
+--- a/mk/win32.mk
++++ b/mk/win32.mk
+@@ -28,7 +28,7 @@ XLN = -gnuwin32
+ # To make sure that the GNU-WIN32 version is picked up, give the pathname
+ # of sort.
+ 
+-SORT = /bin/sort
++SORT = sort
+ 
+ else
+ 
+@@ -179,7 +179,7 @@ define CXXExecutable
+  $(RM) $@; \
+  $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) \
+       $(filter-out $(LibPattern),$^) $$libs; \
+- $(MANIFESTTOOL) /outputresource:"$@;#1" /manifest $@.manifest; \
++ $(MANIFESTTOOL) /outputresource:"$@;#1" -manifest $@.manifest; \
+ )
+ endef
+ 
+@@ -187,7 +187,7 @@ define CExecutable
+ (set -x; \
+  $(RM) $@; \
+  $(CLINK) -out:$@ $(CLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibPattern),$^) $$libs; \
+- $(MANIFESTTOOL) /outputresource:"$@;#1" /manifest $@.manifest; \
++ $(MANIFESTTOOL) /outputresource:"$@;#1" -manifest $@.manifest; \
+ )
+ endef
+ 
+@@ -214,7 +214,7 @@ endif
+ SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
+ SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
+ SharedLibraryShortLibName = $$1$$2_rt$${extrasuffix:-}.lib
+-SharedLibraryDllNameTemplate  = $$1$$2$$3$$4$(compiler_version_suffix)_rt$${extrasuffix:-}
++SharedLibraryDllNameTemplate  = $$1$$2$(compiler_version_suffix)_rt$${extrasuffix:-}
+ SharedLibraryExportSymbolFileNameTemplate = $$1$$2$${extrasuffix:-}.def
+ SharedLibraryVersionStringTemplate = $$3.$$4
+ SharedLibrarySymbolRefLibraryTemplate = $${symrefdir:-static}/$$1$$2$${extrasuffix:-}.lib
+@@ -269,7 +269,7 @@ set -x; \
+ echo "LIBRARY $$dllbase" > $$defname; \
+ echo "VERSION $$version" >> $$defname; \
+ echo "EXPORTS" >> $$defname; \
+-DUMPBIN.EXE /SYMBOLS $$symreflib | \
++DUMPBIN.EXE -SYMBOLS $$symreflib | \
+ egrep '^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +\(\) +External +\| +\?[^ ]*|^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +External +\| +\?[^?][^ ]*'|\
+ egrep -v 'deleting destructor[^(]+\(unsigned int\)' | \
+ egrep -v 'anonymous namespace' | \
+@@ -366,7 +366,7 @@ $(RM) $@; \
+ $(CXXLINK) -out:$$dllname -DLL $$extralinkoption \
+ $$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
+ $^ $$extralibs $$resname; \
+-$(MANIFESTTOOL) /outputresource:"$$dllname;#2" /manifest $$dllname.manifest; \
++$(MANIFESTTOOL) /outputresource:"$$dllname;#2" -manifest $$dllname.manifest; \
+ $(CP) $@ $$slibname;
+ endef
+ 

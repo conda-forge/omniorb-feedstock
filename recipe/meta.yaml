@@ -8,14 +8,14 @@ source:
   url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
   sha256: f05cf999fb2f4c24c1173b3c44ad97215591d0d1a48d49ac0843c464efe073bb
   patches:
-    - patch-configure.diff
-    - 0001-Avoid-kernel-128-character-shebang-limit.patch
-    - 0002-Update-config-guess.patch
-    - omniorb-4.2.5-cmake.patch    # [win]
+    - patch-configure.diff                                 # [unix]
+    - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
+    - 0002-Update-config-guess.patch                       # [unix]
+    - windows-build.patch                                  # [win]
     - omniorb-cross-compile.patch  # [build_platform != target_platform]
 
 build:
-  number: 5
+  number: 6
 
 requirements:
   build:
@@ -25,8 +25,8 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - autoconf  # [unix]
-    - make      # [unix]
-    - cmake >=3.12  # [win]
+    - make
+    - posix     # [win]
   host:
     - python
     - openssl
@@ -51,8 +51,8 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - autoconf  # [unix]
-        - make      # [unix]
-        - cmake >=3.12  # [win]
+        - make
+        - posix     # [win]
       host:
         - openssl
         - zlib
@@ -71,11 +71,10 @@ outputs:
       - lib/libCOS*.so*              # [linux]
       - lib/libomni*.dylib           # [osx]
       - lib/libCOS*.dylib            # [osx]
-      - Library/bin/COS*.dll         # [win]
-      - Library/bin/omni*.dll        # [win]
-      - Library/lib/COS*.lib         # [win]
-      - Library/lib/omni*.lib        # [win]
-      - Library/lib/cmake/OmniORB    # [win]
+      - Library/bin/COS*_rt.dll      # [win]
+      - Library/bin/omni*_rt.dll     # [win]
+      - Library/lib/COS*_rt.lib      # [win]
+      - Library/lib/omni*_rt.lib     # [win]
     test:
       commands:
         - test -f ${PREFIX}/include/omniconfig.h                           # [unix]
@@ -87,7 +86,7 @@ outputs:
         - test -f ${PREFIX}/lib/pkgconfig/omniORB4.pc                      # [unix]
         - if not exist %LIBRARY_INC%\\omniconfig.h exit 1                  # [win]
         - if not exist %LIBRARY_INC%\\omnithread.h exit 1                  # [win]
-        - if not exist %LIBRARY_INC%\\omniORB4\\acconfig.h exit 1          # [win]
+        - if not exist %LIBRARY_INC%\\omniORB4\\CORBA.h exit 1             # [win]
         - if not exist %LIBRARY_BIN%\\omniORB4_rt.dll exit 1               # [win]
         - if not exist %LIBRARY_BIN%\\COS4_rt.dll exit 1                   # [win]
         - if not exist %LIBRARY_BIN%\\omnithread_rt.dll exit 1             # [win]
@@ -116,6 +115,7 @@ outputs:
       - Library/bin/convertior.exe                       # [win]
       - Library/bin/genior.exe                           # [win]
       - Library/bin/nameclt.exe                          # [win]
+      - Library/bin/omkdepend.exe                        # [win]
       - Library/bin/omni*.exe                            # [win]
       - Lib/site-packages/omniidl                        # [win]
       - Lib/site-packages/omniidl_be                     # [win]

@@ -1,18 +1,27 @@
 setlocal EnableDelayedExpansion
 
-mkdir build
-cd build
+set "PYTHONPATH=%PREFIX%"
+cygpath %PYTHON% > tmpFile
+set /p PYTHONPATHOMNI= < tmpFile
+del tmpFile
 
-cmake -G "NMake Makefiles" ^
-      -DCMAKE_BUILD_TYPE=Release ^
-      -DPython_EXECUTABLE="%PYTHON%" ^
-      -DCMAKE_INSTALL_PREFIX:PATH="%LIBRARY_PREFIX%" ^
-      -DCMAKE_PREFIX_PATH:PATH="%LIBRARY_PREFIX%" ^
-      ..
+cd src
+make export
 if errorlevel 1 exit 1
 
-nmake
+cd ..
+
+XCOPY bin\x86_win32\*.exe %LIBRARY_BIN% /s /i /y
 if errorlevel 1 exit 1
 
-nmake install
+XCOPY bin\x86_win32\*_rt.dll %LIBRARY_BIN% /s /i /y
+if errorlevel 1 exit 1
+
+XCOPY lib\x86_win32\*_rt.lib %LIBRARY_LIB% /s /i /y
+if errorlevel 1 exit 1
+
+XCOPY include\* %LIBRARY_INC% /s /i /y
+if errorlevel 1 exit 1
+
+XCOPY lib\python\* %SP_DIR% /s /i /y
 if errorlevel 1 exit 1
