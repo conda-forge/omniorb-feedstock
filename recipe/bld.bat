@@ -1,6 +1,6 @@
 setlocal EnableDelayedExpansion
 
-set "PYTHONPATH=%PREFIX%"
+set "PYTHONPATH=%PREFIX%\Lib"
 cygpath %PYTHON% > tmpFile
 set /p PYTHONPATHOMNI= < tmpFile
 del tmpFile
