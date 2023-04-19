@@ -1,11 +1,11 @@
-About omniorb
-=============
+About omniorb-feedstock
+=======================
+
+Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/omniorb-feedstock/blob/main/LICENSE.txt)
 
 Home: http://omniorb.sourceforge.net/index.html
 
 Package license: GPL-2.0-or-later OR LGPL-2.1-or-later
-
-Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/omniorb-feedstock/blob/main/LICENSE.txt)
 
 Summary: Robust high performance CORBA ORB for C++ and Python
 
