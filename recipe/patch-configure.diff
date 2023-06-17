@@ -1,20 +1,22 @@
---- configure	2018-12-11 00:37:21.000000000 +0100
-+++ configure	2019-02-25 09:22:49.956970400 +0100
-@@ -4361,7 +4361,7 @@
-     sitedir = sysconfig.get_path('purelib', vars={'base':'$am_py_prefix'})
+diff --git a/configure b/configure
+index ee2bcd9..2df5139 100755
+--- a/configure
++++ b/configure
+@@ -5384,7 +5384,7 @@ if can_use_sysconfig:
+   sitedir = sysconfig.get_path('purelib', vars={'base':'$am_py_prefix'})
  else:
-     from distutils import sysconfig
--    sitedir = sysconfig.get_python_lib(0, 0, prefix='$am_py_prefix')
-+    sitedir = sysconfig.get_python_lib()
+   from distutils import sysconfig
+-  sitedir = sysconfig.get_python_lib(0, 0, prefix='$am_py_prefix')
++  sitedir = sysconfig.get_python_lib()
  sys.stdout.write(sitedir)"`
-      case $am_cv_python_pythondir in
-      $am_py_prefix*)
-@@ -4405,7 +4405,7 @@
-     sitedir = sysconfig.get_path('platlib', vars={'platbase':'$am_py_prefix'})
+    #
+    case $am_cv_python_pythondir in
+@@ -5427,7 +5427,7 @@ if can_use_sysconfig:
+   sitedir = sysconfig.get_path('platlib', vars={'platbase':'$am_py_exec_prefix'})
  else:
-     from distutils import sysconfig
--    sitedir = sysconfig.get_python_lib(1, 0, prefix='$am_py_prefix')
-+    sitedir = sysconfig.get_python_lib()
+   from distutils import sysconfig
+-  sitedir = sysconfig.get_python_lib(1, 0, prefix='$am_py_exec_prefix')
++  sitedir = sysconfig.get_python_lib()
  sys.stdout.write(sitedir)"`
-      case $am_cv_python_pyexecdir in
-      $am_py_exec_prefix*)
+    #
+    case $am_cv_python_pyexecdir in

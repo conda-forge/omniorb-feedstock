@@ -1,0 +1,10 @@
+Index: omniORB/contrib/pkgconfig/omnithread3.pc.in
+===================================================================
+--- omniORB/contrib/pkgconfig/omnithread3.pc.in	(revision 6650)
++++ omniORB/contrib/pkgconfig/omnithread3.pc.in	(revision 6651)
+@@ -8,4 +8,4 @@
+ Version: @PACKAGE_VERSION@
+ Requires:
+ Libs: -L${libdir} -lomnithread
+-Cflags: -D@PROCESSOR_DEFINE@ -D@PLATFORM_DEFINE@ -D__OSVERSION__=@OSVERSION@ -I${includedir}
++Cflags: -D__OSVERSION__=@OSVERSION@ -I${includedir}
