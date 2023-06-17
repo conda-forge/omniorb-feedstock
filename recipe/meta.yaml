@@ -8,14 +8,18 @@ source:
   url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
   sha256: f05cf999fb2f4c24c1173b3c44ad97215591d0d1a48d49ac0843c464efe073bb
   patches:
-    - patch-configure.diff                                 # [unix]
     - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
     - 0002-Update-config-guess.patch                       # [unix]
     - windows-build.patch                                  # [win]
     - omniorb-cross-compile.patch  # [build_platform != target_platform]
+    - omniorb-r6639.patch                                  # [unix]
+    - omniorb-r6648.patch                                  # [unix]
+    - omniorb-r6651.patch                                  # [unix]
+    - omniorb-r6653.patch                                  # [unix]
+    - patch-configure.diff                                 # [unix]
 
 build:
-  number: 6
+  number: 7
 
 requirements:
   build:
