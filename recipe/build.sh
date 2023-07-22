@@ -2,8 +2,6 @@
 # Get an updated config.sub and config.guess
 cp $BUILD_PREFIX/share/gnuconfig/config.* ./bin/scripts
 
-export CXXFLAGS=$(echo "${CXXFLAGS}" | sed "s/-std=c++17/-std=c++14/g")
-
 autoconf
 
 if [[ "$host_alias" != "$build_alias" ]]
@@ -12,6 +10,8 @@ then
   # particular omniidl. When cross-compiling, the tools must already be
   # available for your native platform.
   # Compile for native platform first.
+  # With 4.3.0, we have to pass --disable-longdouble here as well,
+  # otherwise arm compilation fails (longdouble is used)
   mkdir -p ${BUILD_PREFIX}/var/omniNames-logs
   touch ${BUILD_PREFIX}/var/omniNames-logs/.mkdir
   mkdir -p ${BUILD_PREFIX}/etc/omniORB-config
@@ -26,6 +26,7 @@ then
                --host=$build_alias \
                --build=$build_alias \
                --with-openssl \
+               --disable-longdouble \
                --with-omniORB-config="${BUILD_PREFIX}/etc/omniORB-config/omniORB.cfg" \
                --with-omniNames-logdir="${BUILD_PREFIX}/var/omniNames-logs" \
                CC=$CC_FOR_BUILD \

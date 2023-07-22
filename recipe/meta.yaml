@@ -1,4 +1,4 @@
-{% set version = "4.2.5" %}
+{% set version = "4.3.0" %}
 
 package:
   name: omniorb
@@ -6,25 +6,24 @@ package:
 
 source:
   url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
-  sha256: f05cf999fb2f4c24c1173b3c44ad97215591d0d1a48d49ac0843c464efe073bb
+  sha256: 976045a2341f4e9a85068b21f4bd928993292933eeecefea372db09e0219eadd
   patches:
     - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
-    - 0002-Update-config-guess.patch                       # [unix]
     - windows-build.patch                                  # [win]
-    - omniorb-cross-compile.patch  # [build_platform != target_platform]
-    - omniorb-r6639.patch                                  # [unix]
-    - omniorb-r6648.patch                                  # [unix]
-    - omniorb-r6651.patch                                  # [unix]
-    - omniorb-r6653.patch                                  # [unix]
+    - omniorb-r6640.patch                                  # [unix]
+    - omniorb-r6649.patch                                  # [unix]
+    - omniorb-r6652.patch                                  # [unix]
+    - omniorb-r6654.patch                                  # [unix]
     - patch-configure.diff                                 # [unix]
 
 build:
-  number: 7
+  number: 0
 
 requirements:
   build:
     - python                                 # [build_platform != target_platform]
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    - zstd                                   # [build_platform != target_platform]
     - gnuconfig  # [unix]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
@@ -35,6 +34,7 @@ requirements:
     - python
     - openssl
     - zlib
+    - zstd
   run:
     - python
     - {{ pin_subpackage('omniorb-libs', exact=True) }}
@@ -60,6 +60,7 @@ outputs:
       host:
         - openssl
         - zlib
+        - zstd
     files:
       - include/COS                  # [unix]
       - include/omniORB4             # [unix]

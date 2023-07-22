@@ -1,8 +1,8 @@
 diff --git a/config/config.mk b/config/config.mk
-index a25b6d5..c433757 100644
+index 31d2cfd..c8e34f5 100644
 --- a/config/config.mk
 +++ b/config/config.mk
-@@ -26,7 +26,7 @@
+@@ -21,7 +21,7 @@
  # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
  # edit the make variables, such as CC and CXX, in the file.
  
@@ -12,7 +12,7 @@ index a25b6d5..c433757 100644
  #platform = x86_win32_vs_14
  #platform = x86_win32_vs_12
 diff --git a/mk/platforms/x86_win32_vs_16.mk b/mk/platforms/x86_win32_vs_16.mk
-index 01aaf3b..8a0dea9 100644
+index cd2f16a..83de390 100644
 --- a/mk/platforms/x86_win32_vs_16.mk
 +++ b/mk/platforms/x86_win32_vs_16.mk
 @@ -6,7 +6,7 @@
@@ -26,8 +26,8 @@ index 01aaf3b..8a0dea9 100644
  
 @@ -23,33 +23,34 @@ ABSTOP = $(shell cd $(TOP); pwd)
  
+ #PYTHON = /cygdrive/c/Python310/python
  #PYTHON = /cygdrive/c/Python27/python
- #PYTHON = /cygdrive/c/Python37/python
 +PYTHON = $(PYTHONPATHOMNI)
  
  
@@ -68,7 +68,7 @@ index 01aaf3b..8a0dea9 100644
  
  #
 diff --git a/mk/win32.mk b/mk/win32.mk
-index 1508d39..1d57f85 100644
+index 94c9aad..6242198 100644
 --- a/mk/win32.mk
 +++ b/mk/win32.mk
 @@ -28,7 +28,7 @@ XLN = -gnuwin32
