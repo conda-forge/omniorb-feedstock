@@ -9,7 +9,6 @@ source:
   sha256: 976045a2341f4e9a85068b21f4bd928993292933eeecefea372db09e0219eadd
   patches:
     - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
-    - 0002-Update-config-guess.patch                       # [unix]
     - windows-build.patch                                  # [win]
     - omniorb-r6640.patch                                  # [unix]
     - omniorb-r6649.patch                                  # [unix]
