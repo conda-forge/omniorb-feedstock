@@ -60,6 +60,7 @@ outputs:
       host:
         - openssl
         - zlib
+        - zstd
     files:
       - include/COS                  # [unix]
       - include/omniORB4             # [unix]
