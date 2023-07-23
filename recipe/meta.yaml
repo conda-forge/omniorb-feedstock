@@ -17,7 +17,7 @@ source:
     - patch-configure.diff                                 # [unix]
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   build:
