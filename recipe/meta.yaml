@@ -10,10 +10,6 @@ source:
   patches:
     - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
     - windows-build.patch                                  # [win]
-    - omniorb-r6640.patch                                  # [unix]
-    - omniorb-r6649.patch                                  # [unix]
-    - omniorb-r6652.patch                                  # [unix]
-    - omniorb-r6654.patch                                  # [unix]
     - patch-configure.diff                                 # [unix]
 
 build:
