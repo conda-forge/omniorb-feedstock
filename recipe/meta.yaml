@@ -13,7 +13,9 @@ source:
     - patch-configure.diff                                 # [unix]
 
 build:
-  number: 1
+  number: 2
+  run_exports:
+    - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
 
 requirements:
   build:
