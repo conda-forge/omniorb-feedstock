@@ -11,9 +11,10 @@ source:
     - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
     - windows-build.patch                                  # [win]
     - patch-configure.diff                                 # [unix]
+    - fix-macos-compatibility-version.patch                # [osx]
 
 build:
-  number: 0
+  number: 1
   run_exports:
     - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
 
