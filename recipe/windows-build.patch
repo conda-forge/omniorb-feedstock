@@ -12,7 +12,7 @@ index 921a17e..014fe08 100644
  #platform = x86_win32_vs_14
  #platform = x86_win32_vs_12
 diff --git a/mk/platforms/x86_win32_vs_16.mk b/mk/platforms/x86_win32_vs_16.mk
-index e503d71..32168f4 100644
+index e503d71..cda09d4 100644
 --- a/mk/platforms/x86_win32_vs_16.mk
 +++ b/mk/platforms/x86_win32_vs_16.mk
 @@ -6,7 +6,7 @@
@@ -67,6 +67,14 @@ index e503d71..32168f4 100644
  
  
  #
+@@ -75,6 +76,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = C:\\temp
+ # the build.
+ #
+ #OPEN_SSL_ROOT = /cygdrive/c/openssl
++OPEN_SSL_ROOT = $(CYGWIN_PREFIX)
+ #
+ 
+ OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
 diff --git a/mk/win32.mk b/mk/win32.mk
 index f13c5ea..07c578e 100644
 --- a/mk/win32.mk
