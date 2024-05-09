@@ -260,6 +260,7 @@ Current release info
 | --- | --- | --- | --- |
 | [![Conda Recipe](https://img.shields.io/badge/recipe-omniorb-green.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/omniorb.svg)](https://anaconda.org/conda-forge/omniorb) |
 | [![Conda Recipe](https://img.shields.io/badge/recipe-omniorb--libs-green.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/omniorb-libs.svg)](https://anaconda.org/conda-forge/omniorb-libs) |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-omniorbpy-green.svg)](https://anaconda.org/conda-forge/omniorbpy) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/omniorbpy.svg)](https://anaconda.org/conda-forge/omniorbpy) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/omniorbpy.svg)](https://anaconda.org/conda-forge/omniorbpy) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/omniorbpy.svg)](https://anaconda.org/conda-forge/omniorbpy) |
 
 Installing omniorb
 ==================
@@ -271,16 +272,16 @@ conda config --add channels conda-forge
 conda config --set channel_priority strict
 ```
 
-Once the `conda-forge` channel has been enabled, `omniorb, omniorb-libs` can be installed with `conda`:
+Once the `conda-forge` channel has been enabled, `omniorb, omniorb-libs, omniorbpy` can be installed with `conda`:
 
 ```
-conda install omniorb omniorb-libs
+conda install omniorb omniorb-libs omniorbpy
 ```
 
 or with `mamba`:
 
 ```
-mamba install omniorb omniorb-libs
+mamba install omniorb omniorb-libs omniorbpy
 ```
 
 It is possible to list all of the versions of `omniorb` available on your platform with `conda`:
