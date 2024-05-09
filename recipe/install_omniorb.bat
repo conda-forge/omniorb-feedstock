@@ -1,7 +1,5 @@
 @echo on
 
-cd omniorb
-
 if [%PKG_NAME%] == [omniorb-libs] (
   XCOPY bin\x86_win32\*_rt.dll %LIBRARY_BIN% /s /i /y
   if errorlevel 1 exit 1

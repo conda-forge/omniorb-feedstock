@@ -5,7 +5,7 @@ cygpath %PYTHON% > tmpFile
 set /p PYTHONPATHOMNI= < tmpFile
 del tmpFile
 
-cd omniorb\src\lib\omniORBpy
+cd src\lib\omniORBpy
 make export
 if errorlevel 1 exit 1
 

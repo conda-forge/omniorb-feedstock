@@ -5,6 +5,6 @@ cygpath %PYTHON% > tmpFile
 set /p PYTHONPATHOMNI= < tmpFile
 del tmpFile
 
-cd omniorb\src
+cd src
 make export
 if errorlevel 1 exit 1

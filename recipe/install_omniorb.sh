@@ -1,4 +1,4 @@
-cd omniorb/build
+cd build
 
 make install
 

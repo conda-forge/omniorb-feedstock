@@ -12,12 +12,11 @@ source:
       - windows-build.patch                                  # [win]
       - patch-configure.diff                                 # [unix]
       - fix-macos-compatibility-version.patch                # [osx]
-    folder: omniorb
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
     sha256: cb5717d412a101baf430f598cac7d69231884dae4372d8e2adf3ddeebc5f7ebb
     patches:
       - windows-build-omniorbpy.patch                        # [win]
-    folder: omniorb/src/lib/omniORBpy
+    folder: src/lib/omniORBpy
 
 build:
   number: 3
@@ -111,9 +110,9 @@ outputs:
         - {{ pin_subpackage('omniorb-libs', exact=True) }}
     test:
       source_files:
-        - omniorb/idl/echo.idl
+        - idl/echo.idl
       commands:
-        - omniidl -bcxx omniorb/idl/echo.idl                 # [unix]
+        - omniidl -bcxx idl/echo.idl                         # [unix]
         - test -f $PREFIX/bin/catior                         # [unix]
         - test -f $PREFIX/bin/convertior                     # [unix]
         - test -f $PREFIX/bin/genior                         # [unix]
@@ -150,16 +149,16 @@ outputs:
         - {{ pin_subpackage('omniorb', exact=True) }}
     test:
       source_files:
-        - omniorb/src/lib/omniORBpy/examples/echo/example_echo.idl
+        - src/lib/omniORBpy/examples/echo/example_echo.idl
       commands:
-        - omniidl -v -bpython omniorb/src/lib/omniORBpy/examples/echo/example_echo.idl
+        - omniidl -v -bpython src/lib/omniORBpy/examples/echo/example_echo.idl
 
 about:
   home: http://omniorb.sourceforge.net/index.html
   license: GPL-2.0-or-later OR LGPL-2.1-or-later
   license_file:
-    - omniorb/COPYING
-    - omniorb/COPYING.LIB
+    - COPYING
+    - COPYING.LIB
   summary: Robust high performance CORBA ORB for C++ and Python
   description: |
     omniORB is an Object Request Broker (ORB) which implements
