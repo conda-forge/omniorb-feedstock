@@ -28,6 +28,7 @@ requirements:
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
     - zstd                                   # [build_platform != target_platform]
     - gnuconfig  # [unix]
+    - {{ stdlib('c') }}
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - autoconf  # [unix]
@@ -54,6 +55,7 @@ outputs:
         - python                                 # [build_platform != target_platform]
         - cross-python_{{ target_platform }}     # [build_platform != target_platform]
         - zstd                                   # [build_platform != target_platform]
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - make
@@ -94,6 +96,7 @@ outputs:
         - python                                 # [build_platform != target_platform]
         - cross-python_{{ target_platform }}     # [build_platform != target_platform]
         - zstd                                   # [build_platform != target_platform]
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - make
@@ -133,6 +136,7 @@ outputs:
         - cross-python_{{ target_platform }}           # [build_platform != target_platform]
         - {{ pin_subpackage('omniorb', exact=True) }}  # [build_platform != target_platform]
         - gnuconfig  # [unix]
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - autoconf   # [unix]
