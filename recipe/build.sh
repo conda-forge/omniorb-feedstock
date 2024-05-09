@@ -1,4 +1,7 @@
 #!/bin/bash
+
+cd omniorb
+
 # Get an updated config.sub and config.guess
 cp $BUILD_PREFIX/share/gnuconfig/config.* ./bin/scripts
 
@@ -46,11 +49,6 @@ then
   CONFIGURE_CROSS_OPTIONS="--host=$host_alias --build=$build_alias --disable-longdouble"
 fi
 
-mkdir -p ${PREFIX}/var/omniNames-logs
-touch ${PREFIX}/var/omniNames-logs/.mkdir
-mkdir -p ${PREFIX}/etc/omniORB-config
-touch ${PREFIX}/etc/omniORB-config/.mkdir
-
 mkdir build
 cd build
 ../configure --prefix="${PREFIX}" $CONFIGURE_CROSS_OPTIONS \
@@ -59,4 +57,3 @@ cd build
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
 
 make -j$CPU_COUNT
-make install
