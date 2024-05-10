@@ -1,6 +1,8 @@
+echo "Compile omniORBpy"
+
 if [[ "$host_alias" != "$build_alias" ]]
 then
-  # Re-install the native omniorb in the new BUILD_PREFIX
+  echo "Install the native omniorb in the new BUILD_PREFIX"
   cd build-native
 
   LDFLAGS_FOR_BUILD=$(echo $LDFLAGS | sed "s?$PREFIX?$BUILD_PREFIX?g")
@@ -22,7 +24,7 @@ then
   cd ..
 
   # Extra options to cross compile
-  CONFIGURE_CROSS_OPTIONS="--host=$host_alias --build=$build_alias"
+  CONFIGURE_CROSS_OPTIONS="--host=$host_alias --build=$build_alias --with-omniorb=$BUILD_PREFIX"
 fi
 
 cd src/lib/omniORBpy

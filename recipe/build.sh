@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Compile omniORB"
 # Get an updated config.sub and config.guess
 cp $BUILD_PREFIX/share/gnuconfig/config.* ./bin/scripts
 
@@ -7,6 +8,7 @@ autoconf
 
 if [[ "$host_alias" != "$build_alias" ]]
 then
+  echo "Compile native omniorb in BUILD_PREFIX for cross-compilation"
   # The normal build makes various tools that are used later in the build, in
   # particular omniidl. When cross-compiling, the tools must already be
   # available for your native platform.
