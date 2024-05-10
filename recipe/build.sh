@@ -56,4 +56,7 @@ cd build
              --with-omniORB-config="${PREFIX}/etc/omniORB-config/omniORB.cfg" \
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
 
+# Check found SSL variables
+grep SSL config.status
+
 make -j$CPU_COUNT

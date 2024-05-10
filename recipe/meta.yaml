@@ -9,6 +9,7 @@ source:
     sha256: 1c745330d01904afd7a1ed0a5896b9a6e53ac1a4b864a48503b93c7eecbf1fa8
     patches:
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
+      - find-openssl-root.patch                              # [unix]
       - windows-build.patch                                  # [win]
       - fix-macos-compatibility-version.patch                # [osx]
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
