@@ -30,7 +30,8 @@ requirements:
     - {{ stdlib('c') }}
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - autoconf  # [unix]
+    - autoconf    # [unix]
+    - pkg-config  # [unix]
     - make
     - posix     # [win]
   host:
