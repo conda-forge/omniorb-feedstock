@@ -146,6 +146,7 @@ outputs:
         - python
         - openssl
         - {{ pin_subpackage('omniorb', exact=True) }}
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
       run:
         - python
         - {{ pin_subpackage('omniorb', exact=True) }}
