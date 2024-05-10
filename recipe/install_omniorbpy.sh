@@ -37,5 +37,9 @@ autoconf
 mkdir build
 cd build
 ../configure --prefix=$PREFIX --with-openssl $CONFIGURE_CROSS_OPTIONS
+
+# Check found SSL variables
+grep SSL config.status
+
 make -j$CPU_COUNT
 make install

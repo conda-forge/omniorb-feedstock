@@ -16,6 +16,7 @@ source:
     sha256: cb5717d412a101baf430f598cac7d69231884dae4372d8e2adf3ddeebc5f7ebb
     patches:
       - windows-build-omniorbpy.patch                        # [win]
+      - find-openssl-root-omniorbpy.patch                    # [unix]
     folder: src/lib/omniORBpy
 
 build:
