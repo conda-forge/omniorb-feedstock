@@ -14,7 +14,7 @@ source:
     - fix-macos-compatibility-version.patch                # [osx]
 
 build:
-  number: 2
+  number: 3
   run_exports:
     - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
 
