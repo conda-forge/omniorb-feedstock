@@ -1,22 +1,26 @@
 {% set version = "4.3.2" %}
 
 package:
-  name: omniorb
+  name: omniorb-suite
   version: {{ version }}
 
 source:
-  url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
-  sha256: 1c745330d01904afd7a1ed0a5896b9a6e53ac1a4b864a48503b93c7eecbf1fa8
-  patches:
-    - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
-    - windows-build.patch                                  # [win]
-    - patch-configure.diff                                 # [unix]
-    - fix-macos-compatibility-version.patch                # [osx]
+  - url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
+    sha256: 1c745330d01904afd7a1ed0a5896b9a6e53ac1a4b864a48503b93c7eecbf1fa8
+    patches:
+      - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
+      - find-openssl-root.patch                              # [unix]
+      - windows-build.patch                                  # [win]
+      - fix-macos-compatibility-version.patch                # [osx]
+  - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
+    sha256: cb5717d412a101baf430f598cac7d69231884dae4372d8e2adf3ddeebc5f7ebb
+    patches:
+      - windows-build-omniorbpy.patch                        # [win]
+      - find-openssl-root-omniorbpy.patch                    # [unix]
+    folder: src/lib/omniORBpy
 
 build:
-  number: 2
-  run_exports:
-    - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
+  number: 3
 
 requirements:
   build:
@@ -24,9 +28,11 @@ requirements:
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
     - zstd                                   # [build_platform != target_platform]
     - gnuconfig  # [unix]
+    - {{ stdlib('c') }}
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - autoconf  # [unix]
+    - autoconf    # [unix]
+    - pkg-config  # [unix]
     - make
     - posix     # [win]
   host:
@@ -34,51 +40,30 @@ requirements:
     - openssl
     - zlib
     - zstd
-  run:
-    - python
-    - {{ pin_subpackage('omniorb-libs', exact=True) }}
 
-test:
-  source_files:
-    - idl/echo.idl
-  commands:
-    - omniidl -bcxx idl/echo.idl  # [unix]
 
 outputs:
   - name: omniorb-libs
+    script: install_omniorb.sh   # [unix]
+    script: install_omniorb.bat  # [win]
     build:
       run_exports:
         - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
+      ignore_run_exports_from:
+        - python
     requirements:
       build:
+        - python                                 # [build_platform != target_platform]
+        - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+        - zstd                                   # [build_platform != target_platform]
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
-        - autoconf  # [unix]
         - make
-        - posix     # [win]
       host:
         - openssl
         - zlib
         - zstd
-    files:
-      - include/COS                  # [unix]
-      - include/omniORB4             # [unix]
-      - include/omnithread           # [unix]
-      - include/omni*                # [unix]
-      - lib/pkgconfig/omni*.pc       # [unix]
-      - Library/include/COS          # [win]
-      - Library/include/omniORB4     # [win]
-      - Library/include/omnithread   # [win]
-      - Library/include/omniVms      # [win]
-      - Library/include/omni*        # [win]
-      - lib/libomni*.so*             # [linux]
-      - lib/libCOS*.so*              # [linux]
-      - lib/libomni*.dylib           # [osx]
-      - lib/libCOS*.dylib            # [osx]
-      - Library/bin/COS*_rt.dll      # [win]
-      - Library/bin/omni*_rt.dll     # [win]
-      - Library/lib/COS*_rt.lib      # [win]
-      - Library/lib/omni*_rt.lib     # [win]
     test:
       commands:
         - test -f ${PREFIX}/include/omniconfig.h                           # [unix]
@@ -100,32 +85,77 @@ outputs:
         - if not exist %LIBRARY_LIB%\\COS4_rt.lib exit 1                   # [win]
         - if not exist %LIBRARY_LIB%\\omnisslTP4_rt.lib exit 1             # [win]
         - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
+
   - name: omniorb
-    files:
-      # WARNING! globs aren't supported for directories (only files)
-      # conda-build will NOT filter on new files only!
-      - bin/catior                                       # [unix]
-      - bin/convertior                                   # [unix]
-      - bin/genior                                       # [unix]
-      - bin/nameclt                                      # [unix]
-      - bin/omkdepend                                    # [unix]
-      - bin/omni*                                        # [unix]
-      - etc/omniORB-config                               # [unix]
-      - lib/libomni*.a                                   # [unix]
-      - lib/libCOS*.a                                    # [unix]
-      - lib/python{{ PY_VER }}/site-packages/_omniidl*   # [unix]
-      - lib/python{{ PY_VER }}/site-packages/omniidl     # [unix]
-      - lib/python{{ PY_VER }}/site-packages/omniidl_be  # [unix]
-      - share/idl/omniORB                                # [unix]
-      - var/omniNames-logs                               # [unix]
-      - Library/bin/catior.exe                           # [win]
-      - Library/bin/convertior.exe                       # [win]
-      - Library/bin/genior.exe                           # [win]
-      - Library/bin/nameclt.exe                          # [win]
-      - Library/bin/omkdepend.exe                        # [win]
-      - Library/bin/omni*.exe                            # [win]
-      - Lib/site-packages/omniidl                        # [win]
-      - Lib/site-packages/omniidl_be                     # [win]
+    script: install_omniorb.sh   # [unix]
+    script: install_omniorb.bat  # [win]
+    build:
+      run_exports:
+        - {{ pin_subpackage('omniorb-libs', max_pin='x.x') }}
+    requirements:
+      build:
+        - python                                 # [build_platform != target_platform]
+        - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+        - zstd                                   # [build_platform != target_platform]
+        - {{ stdlib('c') }}
+        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
+        - make
+      host:
+        - python
+        - openssl
+        - zlib
+        - zstd
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
+      run:
+        - python
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
+    test:
+      source_files:
+        - idl/echo.idl
+      commands:
+        - omniidl -bcxx idl/echo.idl                         # [unix]
+        - test -f $PREFIX/bin/catior                         # [unix]
+        - test -f $PREFIX/bin/convertior                     # [unix]
+        - test -f $PREFIX/bin/genior                         # [unix]
+        - test -f $PREFIX/bin/nameclt                        # [unix]
+        - test -f $PREFIX/bin/omkdepend                      # [unix]
+        - test -f $PREFIX/bin/omniidl                        # [unix]
+        - if not exist %LIBRARY_BIN%\\catior.exe exit 1      # [win]
+        - if not exist %LIBRARY_BIN%\\convertior.exe exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\genior.exe exit 1      # [win]
+        - if not exist %LIBRARY_BIN%\\nameclt.exe exit 1     # [win]
+        - if not exist %LIBRARY_BIN%\\omkdepend.exe exit 1   # [win]
+        - if not exist %LIBRARY_BIN%\\omniidl.exe exit 1     # [win]
+
+  - name: omniorbpy
+    script: install_omniorbpy.sh   # [unix]
+    script: install_omniorbpy.bat  # [win]
+    requirements:
+      build:
+        - python                                       # [build_platform != target_platform]
+        - cross-python_{{ target_platform }}           # [build_platform != target_platform]
+        - gnuconfig  # [unix]
+        - {{ stdlib('c') }}
+        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
+        - autoconf   # [unix]
+        - make
+        - posix      # [win]
+      host:
+        - python
+        - openssl
+        - {{ pin_subpackage('omniorb', exact=True) }}
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
+      run:
+        - python
+        - {{ pin_subpackage('omniorb', exact=True) }}
+        - {{ pin_subpackage('omniorb-libs', exact=True) }}
+    test:
+      source_files:
+        - src/lib/omniORBpy/examples/echo/example_echo.idl
+      commands:
+        - omniidl -v -bpython src/lib/omniORBpy/examples/echo/example_echo.idl
 
 about:
   home: http://omniorb.sourceforge.net/index.html
@@ -142,6 +172,7 @@ about:
   dev_url: https://sourceforge.net/projects/omniorb/
 
 extra:
+  feedstock-name: omniorb
   recipe-maintainers:
     - beenje
     - carlodri

@@ -1,0 +1,13 @@
+diff --git a/acinclude.m4 b/acinclude.m4
+index 1848170..fbd77dc 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -69,7 +69,7 @@ else
+       fi
+     fi
+   fi
+-  if test "$omni_cv_openssl_root" = "yes"; then
++  if test -z "$omni_cv_openssl_root" || test "$omni_cv_openssl_root" = "yes"; then
+     if test "x$prefix" != "xNONE"; then
+       omni_cv_openssl_root=$prefix
+     else
