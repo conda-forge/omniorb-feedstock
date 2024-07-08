@@ -1,0 +1,91 @@
+diff --git a/modules/codesets/dir.mk b/modules/codesets/dir.mk
+index af1e8ad..6431e1f 100644
+--- a/modules/codesets/dir.mk
++++ b/modules/codesets/dir.mk
+@@ -100,7 +100,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_CODESETS_LIB) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/connections/dir.mk b/modules/connections/dir.mk
+index 18104fa..ba1b760 100644
+--- a/modules/connections/dir.mk
++++ b/modules/connections/dir.mk
+@@ -107,7 +107,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_CONNECTIONS_LIB) $(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/dir.mk b/modules/dir.mk
+index 9783f64..b4c0d8c 100644
+--- a/modules/dir.mk
++++ b/modules/dir.mk
+@@ -153,7 +153,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/httpCrypto/dir.mk b/modules/httpCrypto/dir.mk
+index 1e503d2..d52bd1f 100644
+--- a/modules/httpCrypto/dir.mk
++++ b/modules/httpCrypto/dir.mk
+@@ -101,7 +101,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_HTTP_CRYPTO_LIB) $(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/httpTP/dir.mk b/modules/httpTP/dir.mk
+index fda4843..41a6d31 100644
+--- a/modules/httpTP/dir.mk
++++ b/modules/httpTP/dir.mk
+@@ -101,7 +101,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_HTTP_LIB) $(OMNIORB_SSL_LIB) $(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/sslTP/dir.mk b/modules/sslTP/dir.mk
+index 5aea968..d2757e0 100644
+--- a/modules/sslTP/dir.mk
++++ b/modules/sslTP/dir.mk
+@@ -101,7 +101,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_SSL_LIB) $(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)
+diff --git a/modules/ziop/dir.mk b/modules/ziop/dir.mk
+index cf59367..1b5ff3c 100644
+--- a/modules/ziop/dir.mk
++++ b/modules/ziop/dir.mk
+@@ -106,7 +106,7 @@ $(lib): $(OBJS)
+ 	 $(RM) $@; \
+ 	 libs="$(OMNIORB_ZIOP_LIB) $(OMNIORB_LIB_NODYN) $(PYLIB)"; \
+ 	 $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(PYLIBPATH) $(OBJS) $$libs; \
+-         $(MANIFESTTOOL) /outputresource:"$@;#2" /manifest $@.manifest; \
++         $(MANIFESTTOOL) /outputresource:"$@;#2" -manifest $@.manifest; \
+ 	)
+ 
+ export:: $(lib)

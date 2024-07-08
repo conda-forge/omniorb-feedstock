@@ -1,4 +1,6 @@
 #!/bin/bash
+
+echo "Compile omniORB"
 # Get an updated config.sub and config.guess
 cp $BUILD_PREFIX/share/gnuconfig/config.* ./bin/scripts
 
@@ -6,6 +8,7 @@ autoconf
 
 if [[ "$host_alias" != "$build_alias" ]]
 then
+  echo "Compile native omniorb in BUILD_PREFIX for cross-compilation"
   # The normal build makes various tools that are used later in the build, in
   # particular omniidl. When cross-compiling, the tools must already be
   # available for your native platform.
@@ -46,11 +49,6 @@ then
   CONFIGURE_CROSS_OPTIONS="--host=$host_alias --build=$build_alias --disable-longdouble"
 fi
 
-mkdir -p ${PREFIX}/var/omniNames-logs
-touch ${PREFIX}/var/omniNames-logs/.mkdir
-mkdir -p ${PREFIX}/etc/omniORB-config
-touch ${PREFIX}/etc/omniORB-config/.mkdir
-
 mkdir build
 cd build
 ../configure --prefix="${PREFIX}" $CONFIGURE_CROSS_OPTIONS \
@@ -58,5 +56,7 @@ cd build
              --with-omniORB-config="${PREFIX}/etc/omniORB-config/omniORB.cfg" \
              --with-omniNames-logdir="${PREFIX}/var/omniNames-logs"
 
+# Check found SSL variables
+grep SSL config.status
+
 make -j$CPU_COUNT
-make install
