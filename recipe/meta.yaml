@@ -20,7 +20,7 @@ source:
     folder: src/lib/omniORBpy
 
 build:
-  number: 4
+  number: 5
 
 requirements:
   build:
@@ -53,8 +53,6 @@ outputs:
         - python
     requirements:
       build:
-        - python                                 # [build_platform != target_platform]
-        - cross-python_{{ target_platform }}     # [build_platform != target_platform]
         - zstd                                   # [build_platform != target_platform]
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
