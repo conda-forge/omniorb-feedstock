@@ -1,4 +1,4 @@
-{% set version = "4.3.2" %}
+{% set version = "4.3.3" %}
 
 package:
   name: omniorb-suite
@@ -6,21 +6,21 @@ package:
 
 source:
   - url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
-    sha256: 1c745330d01904afd7a1ed0a5896b9a6e53ac1a4b864a48503b93c7eecbf1fa8
+    sha256: accd25e2cb70c4e33ed227b0d93e9669e38c46019637887c771398870ed45e7a
     patches:
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
       - find-openssl-root.patch                              # [unix]
       - windows-build.patch                                  # [win]
       - fix-macos-compatibility-version.patch                # [osx]
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
-    sha256: cb5717d412a101baf430f598cac7d69231884dae4372d8e2adf3ddeebc5f7ebb
+    sha256: 385c14e7ccd8463a68a388f4f2be3edcdd3f25a86b839575326bd2dc00078c22
     patches:
       - windows-build-omniorbpy.patch                        # [win]
       - find-openssl-root-omniorbpy.patch                    # [unix]
     folder: src/lib/omniORBpy
 
 build:
-  number: 5
+  number: 0
 
 requirements:
   build:
@@ -44,7 +44,7 @@ requirements:
 
 outputs:
   - name: omniorb-libs
-    script: install_omniorb.sh   # [unix]
+    script: install_omniorb.sh  # [unix]
     script: install_omniorb.bat  # [win]
     build:
       run_exports:
@@ -85,7 +85,7 @@ outputs:
         - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
 
   - name: omniorb
-    script: install_omniorb.sh   # [unix]
+    script: install_omniorb.sh  # [unix]
     script: install_omniorb.bat  # [win]
     build:
       run_exports:
@@ -127,7 +127,7 @@ outputs:
         - if not exist %LIBRARY_BIN%\\omniidl.exe exit 1     # [win]
 
   - name: omniorbpy
-    script: install_omniorbpy.sh   # [unix]
+    script: install_omniorbpy.sh  # [unix]
     script: install_omniorbpy.bat  # [win]
     requirements:
       build:
