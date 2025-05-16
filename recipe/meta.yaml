@@ -9,15 +9,17 @@ source:
     sha256: accd25e2cb70c4e33ed227b0d93e9669e38c46019637887c771398870ed45e7a
     patches:
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
+      - omniorb-r6785.patch
       - windows-build.patch                                  # [win]
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
     sha256: 385c14e7ccd8463a68a388f4f2be3edcdd3f25a86b839575326bd2dc00078c22
     patches:
+      - omniorbpy-r6785.patch
       - windows-build-omniorbpy.patch                        # [win]
     folder: src/lib/omniORBpy
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   build:

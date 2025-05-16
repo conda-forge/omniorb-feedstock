@@ -1,0 +1,26 @@
+Index: mk/beforeauto.mk.in
+===================================================================
+--- mk/beforeauto.mk.in	(revision 6784)
++++ mk/beforeauto.mk.in	(revision 6785)
+@@ -1123,7 +1123,7 @@
+ SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
+ SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+ SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib $(CXXLINKOPTIONS) \
+-                                         -install_name $(INSTALLLIBDIR)/$(SharedLibraryFullNameTemplate) \
++                                         -install_name $(INSTALLLIBDIR)/$(SharedLibrarySoNameTemplate) \
+                                          -compatibility_version $$2.$$3 \
+                                          -current_version $$2.$$3.$$4
+ PythonLibraryPlatformLinkFlagsTemplate = -bundle -undefined dynamic_lookup
+Index: src/lib/omnithread/dir.mk
+===================================================================
+--- src/lib/omnithread/dir.mk	(revision 6784)
++++ src/lib/omnithread/dir.mk	(revision 6785)
+@@ -111,7 +111,7 @@
+ ifdef Darwin
+ # Override normal compatibility for the version with only two components.
+ SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib $(CXXLINKOPTIONS) \
+-                                         -install_name $(INSTALLLIBDIR)/$(SharedLibraryFullNameTemplate) \
++                                         -install_name $(INSTALLLIBDIR)/$(SharedLibrarySoNameTemplate) \
+                                          -compatibility_version $$3.$$4 \
+                                          -current_version $$3.$$4
+ endif
