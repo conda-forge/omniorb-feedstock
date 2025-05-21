@@ -1,0 +1,13 @@
+Index: mk/beforeauto.mk.in
+===================================================================
+--- mk/beforeauto.mk.in	(revision 6784)
++++ mk/beforeauto.mk.in	(revision 6785)
+@@ -1098,7 +1098,7 @@
+ SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
+ SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+ SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib \
+-                                         -install_name $(INSTALLLIBDIR)/$(SharedLibraryFullNameTemplate)
++                                         -install_name $(INSTALLLIBDIR)/$(SharedLibrarySoNameTemplate)
+ PythonLibraryPlatformLinkFlagsTemplate = -bundle -undefined dynamic_lookup
+ PythonSHAREDLIB_SUFFIX = so
+ 
