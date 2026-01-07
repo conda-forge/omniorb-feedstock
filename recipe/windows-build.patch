@@ -1,32 +1,32 @@
 diff --git a/config/config.mk b/config/config.mk
-index 921a17e..014fe08 100644
+index 921a17e..d52fe1b 100644
 --- a/config/config.mk
 +++ b/config/config.mk
-@@ -23,7 +23,7 @@
+@@ -22,7 +22,7 @@
+ # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
  # edit the make variables, such as CC and CXX, in the file.
  
- #platform = x86_win32_vs_17
--#platform = x86_win32_vs_16
-+platform = x86_win32_vs_16
+-#platform = x86_win32_vs_17
++platform = x86_win32_vs_17
+ #platform = x86_win32_vs_16
  #platform = x86_win32_vs_15
  #platform = x86_win32_vs_14
- #platform = x86_win32_vs_12
-diff --git a/mk/platforms/x86_win32_vs_16.mk b/mk/platforms/x86_win32_vs_16.mk
-index e503d71..cda09d4 100644
---- a/mk/platforms/x86_win32_vs_16.mk
-+++ b/mk/platforms/x86_win32_vs_16.mk
+diff --git a/mk/platforms/x86_win32_vs_17.mk b/mk/platforms/x86_win32_vs_17.mk
+index f884b1e..42186e7 100644
+--- a/mk/platforms/x86_win32_vs_17.mk
++++ b/mk/platforms/x86_win32_vs_17.mk
 @@ -6,7 +6,7 @@
  WindowsNT = 1
  x86Processor = 1
  
--compiler_version_suffix=_vc16
+-compiler_version_suffix=_vc17
 +compiler_version_suffix=
  
  WINVER = 0x0501
  
 @@ -23,33 +23,34 @@ ABSTOP = $(shell cd $(TOP); pwd)
  
- #PYTHON = /cygdrive/c/Python310/python
+ #PYTHON = /cygdrive/c/Program\ Files/Python311/python
  #PYTHON = /cygdrive/c/Python27/python
 +PYTHON = $(PYTHONPATHOMNI)
  
