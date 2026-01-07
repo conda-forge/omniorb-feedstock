@@ -54,6 +54,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
+        - pkg-config  # [unix]
         - make
       host:
         - openssl
@@ -95,6 +96,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
+        - pkg-config  # [unix]
         - make
       host:
         - python
@@ -135,6 +137,7 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - autoconf   # [unix]
+        - pkg-config  # [unix]
         - make
         - posix      # [win]
       host:
