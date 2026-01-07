@@ -31,7 +31,7 @@ requirements:
     - autoconf    # [unix]
     - pkg-config  # [unix]
     - make
-    - posix     # [win]
+    - m2-base   # [win]
   host:
     - python
     - openssl
@@ -139,7 +139,7 @@ outputs:
         - autoconf   # [unix]
         - pkg-config  # [unix]
         - make
-        - posix      # [win]
+        - m2-base    # [win]
       host:
         - python
         - openssl
