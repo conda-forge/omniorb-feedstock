@@ -10,10 +10,12 @@ source:
     patches:
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
       - windows-build.patch                                  # [win]
+      - fix-pysubdir-omniorb.patch                           # [win]
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
     sha256: a709c3c77b9c6b08616e1c9e12a5a9b9d5ccc1f2dcf6f647f205018d77f819a7
     patches:
       - windows-build-omniorbpy.patch                        # [win]
+      - fix-pysubdir-omniorbpy.patch                         # [win]
     folder: src/lib/omniORBpy
 
 build:
