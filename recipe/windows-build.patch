@@ -76,7 +76,7 @@ index f884b1e..42186e7 100644
  
  OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
 diff --git a/mk/win32.mk b/mk/win32.mk
-index f13c5ea..07c578e 100644
+index f13c5ea..78c8377 100644
 --- a/mk/win32.mk
 +++ b/mk/win32.mk
 @@ -28,7 +28,7 @@ XLN = -gnuwin32
@@ -133,3 +133,33 @@ index f13c5ea..07c578e 100644
  $(CP) $@ $$slibname;
  endef
  
+@@ -448,23 +448,23 @@ debug/%.o: %.cc
+ 	$(CXX) -c  $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shared/%DynSK.o: %DynSK.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ shared/%SK.o: %SK.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ shared/%.o: %.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ 
+ shareddebug/%DynSK.o: %DynSK.cc
+-	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shareddebug/%SK.o: %SK.cc
+-	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shareddebug/%.o: %.cc
+-	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ static/%.o: %.c
+ 	$(CC) -c $(CDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdstatic\\$(LIB_NAME)$(major).pdb $<
