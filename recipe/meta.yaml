@@ -1,4 +1,4 @@
-{% set version = "4.3.3" %}
+{% set version = "4.3.4" %}
 
 package:
   name: omniorb-suite
@@ -6,20 +6,20 @@ package:
 
 source:
   - url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
-    sha256: accd25e2cb70c4e33ed227b0d93e9669e38c46019637887c771398870ed45e7a
+    sha256: 79720d415d23cd8da99287a4ef4da0aa1bd34d3e4c7b1530715600adc5ed3dc3
     patches:
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
-      - omniorb-r6785.patch
       - windows-build.patch                                  # [win]
+      - fix-pysubdir-omniorb.patch                           # [win]
   - url: https://sourceforge.net/projects/omniorb/files/omniORBpy/omniORBpy-{{ version }}/omniORBpy-{{ version }}.tar.bz2
-    sha256: 385c14e7ccd8463a68a388f4f2be3edcdd3f25a86b839575326bd2dc00078c22
+    sha256: a709c3c77b9c6b08616e1c9e12a5a9b9d5ccc1f2dcf6f647f205018d77f819a7
     patches:
-      - omniorbpy-r6785.patch
       - windows-build-omniorbpy.patch                        # [win]
+      - fix-pysubdir-omniorbpy.patch                         # [win]
     folder: src/lib/omniORBpy
 
 build:
-  number: 2
+  number: 0
 
 requirements:
   build:
@@ -33,7 +33,8 @@ requirements:
     - autoconf    # [unix]
     - pkg-config  # [unix]
     - make
-    - posix     # [win]
+    - m2-base       # [win]
+    - m2-diffutils  # [win]
   host:
     - python
     - openssl
@@ -56,6 +57,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
+        - pkg-config  # [unix]
         - make
       host:
         - openssl
@@ -97,6 +99,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
+        - pkg-config  # [unix]
         - make
       host:
         - python
@@ -137,8 +140,10 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - autoconf   # [unix]
+        - pkg-config  # [unix]
         - make
-        - posix      # [win]
+        - m2-base       # [win]
+        - m2-diffutils  # [win]
       host:
         - python
         - openssl

@@ -1,0 +1,36 @@
+diff --git a/dir.mk b/dir.mk
+index 21b7632..d553226 100644
+--- a/dir.mk
++++ b/dir.mk
+@@ -1,4 +1,4 @@
+-PYSUBDIR = $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[0] == "3" and "python3" or "python2")')
++PYSUBDIR = python3
+ 
+ SUBDIRS = modules $(PYSUBDIR) include
+ 
+diff --git a/python3/COS/dir.mk b/python3/COS/dir.mk
+index 9c3cddd..b78e5a8 100644
+--- a/python3/COS/dir.mk
++++ b/python3/COS/dir.mk
+@@ -2,7 +2,7 @@ PYLIBROOT= $(EXPORT_TREE)/lib/python
+ PYLIBDIR = $(PYLIBROOT)/omniORB/COS
+ INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniORB/COS
+ 
+-PYSUBDIR = $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[0] == "3" and "python3" or "python2")')
++PYSUBDIR = python3
+ 
+ # Where to look for IDL files.
+ # This list could be configurable.
+diff --git a/python3/omniORB/dir.mk b/python3/omniORB/dir.mk
+index 17db249..efdffd3 100644
+--- a/python3/omniORB/dir.mk
++++ b/python3/omniORB/dir.mk
+@@ -2,7 +2,7 @@ PYLIBROOT= $(EXPORT_TREE)/lib/python
+ PYLIBDIR = $(PYLIBROOT)/omniORB
+ INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniORB
+ 
+-PYSUBDIR = $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[0] == "3" and "python3" or "python2")')
++PYSUBDIR = python3
+ 
+ ir_idl.py: ir.idl
+ 	$(OMNIIDL) -v -p$(BASE_OMNI_TREE)/$(PYSUBDIR)/omniidl_be \

@@ -1,32 +1,32 @@
 diff --git a/config/config.mk b/config/config.mk
-index 921a17e..014fe08 100644
+index 921a17e..d52fe1b 100644
 --- a/config/config.mk
 +++ b/config/config.mk
-@@ -23,7 +23,7 @@
+@@ -22,7 +22,7 @@
+ # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
  # edit the make variables, such as CC and CXX, in the file.
  
- #platform = x86_win32_vs_17
--#platform = x86_win32_vs_16
-+platform = x86_win32_vs_16
+-#platform = x86_win32_vs_17
++platform = x86_win32_vs_17
+ #platform = x86_win32_vs_16
  #platform = x86_win32_vs_15
  #platform = x86_win32_vs_14
- #platform = x86_win32_vs_12
-diff --git a/mk/platforms/x86_win32_vs_16.mk b/mk/platforms/x86_win32_vs_16.mk
-index e503d71..cda09d4 100644
---- a/mk/platforms/x86_win32_vs_16.mk
-+++ b/mk/platforms/x86_win32_vs_16.mk
+diff --git a/mk/platforms/x86_win32_vs_17.mk b/mk/platforms/x86_win32_vs_17.mk
+index f884b1e..42186e7 100644
+--- a/mk/platforms/x86_win32_vs_17.mk
++++ b/mk/platforms/x86_win32_vs_17.mk
 @@ -6,7 +6,7 @@
  WindowsNT = 1
  x86Processor = 1
  
--compiler_version_suffix=_vc16
+-compiler_version_suffix=_vc17
 +compiler_version_suffix=
  
  WINVER = 0x0501
  
 @@ -23,33 +23,34 @@ ABSTOP = $(shell cd $(TOP); pwd)
  
- #PYTHON = /cygdrive/c/Python310/python
+ #PYTHON = /cygdrive/c/Program\ Files/Python311/python
  #PYTHON = /cygdrive/c/Python27/python
 +PYTHON = $(PYTHONPATHOMNI)
  
@@ -76,7 +76,7 @@ index e503d71..cda09d4 100644
  
  OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
 diff --git a/mk/win32.mk b/mk/win32.mk
-index f13c5ea..07c578e 100644
+index f13c5ea..78c8377 100644
 --- a/mk/win32.mk
 +++ b/mk/win32.mk
 @@ -28,7 +28,7 @@ XLN = -gnuwin32
@@ -133,3 +133,33 @@ index f13c5ea..07c578e 100644
  $(CP) $@ $$slibname;
  endef
  
+@@ -448,23 +448,23 @@ debug/%.o: %.cc
+ 	$(CXX) -c  $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shared/%DynSK.o: %DynSK.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ shared/%SK.o: %SK.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ shared/%.o: %.cc
+-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\ $<
++	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshared\\$(LIB_NAME)$(major).pdb $<
+ 
+ 
+ shareddebug/%DynSK.o: %DynSK.cc
+-	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shareddebug/%SK.o: %SK.cc
+-	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ shareddebug/%.o: %.cc
+-	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\ $<
++	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdshareddebug\\$(LIB_NAME)$(major)d.pdb $<
+ 
+ static/%.o: %.c
+ 	$(CC) -c $(CDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ -Fdstatic\\$(LIB_NAME)$(major).pdb $<
