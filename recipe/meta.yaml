@@ -8,6 +8,7 @@ source:
   - url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-{{ version }}/omniORB-{{ version }}.tar.bz2
     sha256: 79720d415d23cd8da99287a4ef4da0aa1bd34d3e4c7b1530715600adc5ed3dc3
     patches:
+      - omniorb-r6810.patch
       - 0001-Avoid-kernel-128-character-shebang-limit.patch  # [unix]
       - windows-build.patch                                  # [win]
       - fix-pysubdir-omniorb.patch                           # [win]

@@ -1,0 +1,13 @@
+Index: src/lib/omniORB/orbcore/giopServer.cc
+===================================================================
+--- src/lib/omniORB/orbcore/giopServer.cc	(revision 6809)
++++ src/lib/omniORB/orbcore/giopServer.cc	(revision 6810)
+@@ -488,7 +488,7 @@
+ 
+   unsigned long timeout;
+   if (orbParameters::scanGranularity)
+-    timeout = orbParameters::scanGranularity;
++    timeout = orbParameters::scanGranularity * 2;
+   else
+     timeout = 5;
+ 
