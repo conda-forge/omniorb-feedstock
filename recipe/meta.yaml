@@ -32,7 +32,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - autoconf    # [unix]
-    - pkg-config  # [unix]
+    - pkg-config
     - make
     - m2-base       # [win]
     - m2-diffutils  # [win]
@@ -58,7 +58,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
-        - pkg-config  # [unix]
+        - pkg-config
         - make
       host:
         - openssl
@@ -85,6 +85,7 @@ outputs:
         - if not exist %LIBRARY_LIB%\\COS4_rt.lib exit 1                   # [win]
         - if not exist %LIBRARY_LIB%\\omnisslTP4_rt.lib exit 1             # [win]
         - if not exist %LIBRARY_LIB%\\omnithread_rt.lib exit 1             # [win]
+        - if not exist %LIBRARY_LIB%\\pkgconfig\\omniORB4.pc exit 1        # [win]
 
   - name: omniorb
     script: install_omniorb.sh  # [unix]
@@ -100,7 +101,7 @@ outputs:
         - {{ stdlib('c') }}
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
-        - pkg-config  # [unix]
+        - pkg-config
         - make
       host:
         - python
@@ -141,7 +142,7 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - autoconf   # [unix]
-        - pkg-config  # [unix]
+        - pkg-config
         - make
         - m2-base       # [win]
         - m2-diffutils  # [win]
