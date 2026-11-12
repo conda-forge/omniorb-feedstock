@@ -75,7 +75,9 @@ outputs:
             - lib/pkgconfig/omni*.pc
         - if: linux
           then:
+            - lib/libCOS*.so
             - lib/libCOS*.so.*
+            - lib/libomni*.so
             - lib/libomni*.so.*
         - if: osx
           then:
