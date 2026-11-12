@@ -65,6 +65,8 @@ outputs:
       name: omniorb-libs
     inherit: omniorb-build
     build:
+      script:
+        file: install_omniorb
       files:
         - if: unix
           then:
@@ -96,6 +98,14 @@ outputs:
             - Library/lib/COS*_rt.lib
             - Library/lib/omni*_rt.lib
     requirements:
+      # requirements to run make install
+      build:
+        - ${{ stdlib('c') }}
+        - ${{ compiler('c') }}
+        - ${{ compiler('cxx') }}
+        - make
+      host:
+        - python
       run_exports:
         - ${{ pin_subpackage('omniorb-libs', upper_bound='x.x') }}
       ignore_run_exports:
@@ -128,6 +138,8 @@ outputs:
       name: omniorb
     inherit: omniorb-build
     build:
+      script:
+        file: install_omniorb
       files:
         - if: unix
           then:
@@ -160,6 +172,14 @@ outputs:
             - Library/bin/omkdepend.exe
             - Library/bin/omni*.exe
     requirements:
+      # requirements to run make install
+      build:
+        - ${{ stdlib('c') }}
+        - ${{ compiler('c') }}
+        - ${{ compiler('cxx') }}
+        - make
+      host:
+        - python
       run_exports:
         - ${{ pin_subpackage('omniorb-libs', upper_bound='x.x') }}
       run:
@@ -184,6 +204,9 @@ outputs:
 
   - package:
       name: omniorbpy
+    inherit:
+      from: omniorb-build
+      run_exports: false
     build:
       script:
         file: install_omniorbpy

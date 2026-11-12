@@ -13,6 +13,7 @@ cd ..\..\..
 
 @echo on
 
+del include\GNUmakefile.in
 XCOPY include\* %LIBRARY_INC% /s /i /y
 if errorlevel 1 exit 1
 

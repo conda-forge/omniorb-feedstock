@@ -60,10 +60,3 @@ cd build
 grep SSL config.status
 
 make -j$CPU_COUNT
-
-make install
-
-mkdir -p ${PREFIX}/var/omniNames-logs
-touch ${PREFIX}/var/omniNames-logs/.mkdir
-mkdir -p ${PREFIX}/etc/omniORB-config
-touch ${PREFIX}/etc/omniORB-config/.mkdir
