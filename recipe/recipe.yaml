@@ -11,7 +11,6 @@ source:
   - url: https://sourceforge.net/projects/omniorb/files/omniORB/omniORB-${{ version }}/omniORB-${{ version }}.tar.bz2
     sha256: d57c5ec43030b31eeb620b4c8e47d62bf08eab4945dbeab0e094f10c8447bf93
     patches:
-      - omniorb-r6810.patch
       - if: unix
         then: 0001-Avoid-kernel-128-character-shebang-limit.patch
       - if: win
