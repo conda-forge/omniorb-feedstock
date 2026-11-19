@@ -27,7 +27,7 @@ source:
     target_directory: src/lib/omniORBpy
 
 build:
-  number: 0
+  number: 1
 
 outputs:
   - staging:
@@ -159,8 +159,12 @@ outputs:
             - var/omniNames-logs
         - if: win
           then:
+            # For Python <=3.14
             - Lib/site-packages/omniidl/*
             - Lib/site-packages/omniidl_be/*
+            # For Python >=3.15
+            - lib/python/site-packages/omniidl/*
+            - lib/python/site-packages/omniidl_be/*
             - Library/bin/catior.exe
             - Library/bin/clwrapper.exe
             - Library/bin/convertior.exe
@@ -186,10 +190,12 @@ outputs:
         - python
         - ${{ pin_subpackage('omniorb-libs', exact=True) }}
     tests:
+      - python:
+          imports:
+            - omniidl
+            - omniidl_be
       -  script:
-          - if: unix
-            then:
-              - omniidl -bcxx idl/echo.idl
+           - omniidl -bcxx idl/echo.idl
          files:
           source:
             - idl/echo.idl
